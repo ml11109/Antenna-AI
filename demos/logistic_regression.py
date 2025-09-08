@@ -3,9 +3,6 @@ import sklearn
 import torch
 import torch.nn as nn
 
-"""
-Logistic regression model (sigmoid on linear function)
-"""
 
 class Model(nn.Module):
 
