@@ -19,7 +19,7 @@ class AntennaDataHandler:
 
     def load_data(self):
         try:
-            df = pd.read_csv(DATA_PATH_ROOT + self.filename)
+            df = pd.read_csv(DATA_DIRECTORY + self.filename)
             x = df.iloc[:, :self.input_dim].values
             y = df.iloc[:, self.input_dim: self.input_dim + self.output_dim].values
 
@@ -29,11 +29,11 @@ class AntennaDataHandler:
             return x, y
 
         except FileNotFoundError:
-            print(f"File not found: {DATA_PATH_ROOT}{self.filename}")
+            print(f"File not found: {DATA_DIRECTORY}{self.filename}")
             return None, None
 
         except IndexError:
-            print(f"Index error while loading data from {DATA_PATH_ROOT}{self.filename}")
+            print(f"Index error while loading data from {DATA_DIRECTORY}{self.filename}")
             return None, None
 
     def scale_x(self, x):
@@ -49,15 +49,15 @@ class AntennaDataHandler:
         return self.scaler_y.inverse_transform(y)
 
     def save_scalers(self):
-        joblib.dump(self.scaler_x, MODEL_PATH_ROOT + self.filename + '_x_scaler.pkl')
-        joblib.dump(self.scaler_y, MODEL_PATH_ROOT + self.filename + '_y_scaler.pkl')
+        joblib.dump(self.scaler_x, MODEL_DIRECTORY + self.filename + '_x_scaler.pkl')
+        joblib.dump(self.scaler_y, MODEL_DIRECTORY + self.filename + '_y_scaler.pkl')
 
     def load_scalers(self):
         try:
-            self.scaler_x = joblib.load(MODEL_PATH_ROOT + self.filename + '_x_scaler.pkl')
-            self.scaler_y = joblib.load(MODEL_PATH_ROOT + self.filename + '_y_scaler.pkl')
+            self.scaler_x = joblib.load(MODEL_DIRECTORY + self.filename + '_x_scaler.pkl')
+            self.scaler_y = joblib.load(MODEL_DIRECTORY + self.filename + '_y_scaler.pkl')
 
         except FileNotFoundError:
-            print(f"File not found: {MODEL_PATH_ROOT}{self.filename}_x_scaler.pkl or {MODEL_PATH_ROOT}{self.filename}_y_scaler.pkl")
+            print(f"File not found: {MODEL_DIRECTORY}{self.filename}_x_scaler.pkl or {MODEL_DIRECTORY}{self.filename}_y_scaler.pkl")
             self.scaler_x = MinMaxScaler()
             self.scaler_y = StandardScaler()

@@ -10,5 +10,5 @@ OUTPUT_DIM = 1
 
 DATA_FILENAME = 'antenna_data_1.csv'
 MODEL_FILENAME = 'antenna_predictor_1.pth'
-DATA_PATH_ROOT = 'neural_network/data/'
-MODEL_PATH_ROOT = 'neural_network/models/'
+DATA_DIRECTORY = 'neural_network/data/'
+MODEL_DIRECTORY = 'neural_network/models/'

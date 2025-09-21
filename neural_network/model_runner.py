@@ -14,7 +14,7 @@ from model import AntennaPredictorModel
 
 # Load model metadata
 metadata_filename = MODEL_FILENAME.replace('.pth', '_metadata.json')
-with open(MODEL_PATH_ROOT + metadata_filename, 'r') as f:
+with open(MODEL_DIRECTORY + metadata_filename, 'r') as f:
     metadata = json.load(f)
 
 input_dim = metadata['input_dimensions']
@@ -22,7 +22,7 @@ output_dim = metadata['output_dimensions']
 
 # Load model
 model = AntennaPredictorModel(input_dim, output_dim)
-model.load_state_dict(torch.load(MODEL_PATH_ROOT + MODEL_FILENAME))
+model.load_state_dict(torch.load(MODEL_DIRECTORY + MODEL_FILENAME))
 model.eval()
 
 # Load data loader

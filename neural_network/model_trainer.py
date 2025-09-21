@@ -3,6 +3,7 @@ Trains a neural network to predict antenna simulation outputs based on input par
 """
 
 import json
+import os
 
 import torch
 from sklearn.model_selection import train_test_split
@@ -55,7 +56,8 @@ with torch.no_grad():
         print(f"Test Loss: {loss.item():.4f}")
 
 # Save model
-torch.save(model.state_dict(), MODEL_PATH_ROOT + MODEL_FILENAME)
+os.makedirs(MODEL_DIRECTORY, exist_ok=True)
+torch.save(model.state_dict(), MODEL_DIRECTORY + MODEL_FILENAME)
 loader.save_scalers()
 
 # Save model metadata
@@ -64,8 +66,8 @@ metadata = {
     'output_dimensions': OUTPUT_DIM,
     'data_filename': DATA_FILENAME,
     'model_filename': MODEL_FILENAME,
-    'data_path': DATA_PATH_ROOT + DATA_FILENAME,
-    'model_path': MODEL_PATH_ROOT + MODEL_FILENAME,
+    'data_path': DATA_DIRECTORY + DATA_FILENAME,
+    'model_path': MODEL_DIRECTORY + MODEL_FILENAME,
     'training_parameters': {
         'num_epochs': NUM_EPOCHS,
         'batch_size': BATCH_SIZE,
@@ -74,5 +76,5 @@ metadata = {
 }
 
 metadata_filename = MODEL_FILENAME.replace('.pth', '_metadata.json')
-with open(MODEL_PATH_ROOT + metadata_filename, 'w') as f:
+with open(MODEL_DIRECTORY + metadata_filename, 'w') as f:
     json.dump(metadata, f, indent=4)
