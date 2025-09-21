@@ -49,15 +49,15 @@ class AntennaDataHandler:
         return self.scaler_y.inverse_transform(y)
 
     def save_scalers(self):
-        joblib.dump(self.scaler_x, MODEL_DIRECTORY + self.filename + '_x_scaler.pkl')
-        joblib.dump(self.scaler_y, MODEL_DIRECTORY + self.filename + '_y_scaler.pkl')
+        joblib.dump(self.scaler_x, MODEL_DIRECTORY + self.filename.replace('.csv', '_x_scaler.pkl'))
+        joblib.dump(self.scaler_y, MODEL_DIRECTORY + self.filename.replace('.csv', '_y_scaler.pkl'))
 
     def load_scalers(self):
         try:
-            self.scaler_x = joblib.load(MODEL_DIRECTORY + self.filename + '_x_scaler.pkl')
-            self.scaler_y = joblib.load(MODEL_DIRECTORY + self.filename + '_y_scaler.pkl')
+            self.scaler_x = joblib.load(MODEL_DIRECTORY + self.filename.replace('.csv', '_x_scaler.pkl'))
+            self.scaler_y = joblib.load(MODEL_DIRECTORY + self.filename.replace('.csv', '_y_scaler.pkl'))
 
         except FileNotFoundError:
-            print(f"File not found: {MODEL_DIRECTORY}{self.filename}_x_scaler.pkl or {MODEL_DIRECTORY}{self.filename}_y_scaler.pkl")
+            print(f"File not found: {MODEL_DIRECTORY}{self.filename.replace('.csv', '_x_scaler.pkl')} or {MODEL_DIRECTORY}{self.filename.replace('.csv', '_y_scaler.pkl')}")
             self.scaler_x = MinMaxScaler()
             self.scaler_y = StandardScaler()
