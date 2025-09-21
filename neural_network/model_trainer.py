@@ -8,6 +8,7 @@ import os
 import torch
 from sklearn.model_selection import train_test_split
 from torch import nn, optim
+from torch.utils.data import TensorDataset, DataLoader
 
 from constants import *
 from data_handler import AntennaDataHandler
@@ -20,11 +21,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Load and preprocess data
 loader = AntennaDataHandler(DATA_FILENAME, INPUT_DIM, OUTPUT_DIM)
 X_data, y_data = loader.load_data()
-X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, random_state=0)
-train_dataset = torch.utils.data.TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
-test_dataset = torch.utils.data.TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
-train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
+train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+test_dataset = TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
+train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Model, loss function, and optimizer
 model = AntennaPredictorModel(INPUT_DIM, OUTPUT_DIM).to(device)
@@ -42,7 +43,8 @@ for epoch in range(NUM_EPOCHS):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        if i % 20 == 0:
+
+        if epoch % 20 == 0 and i % 20 == 0:
             print(f"Epoch: {epoch}, Iteration: {i}, Loss: {loss.item():.4f}")
 
 # Evaluation
@@ -53,6 +55,7 @@ with torch.no_grad():
 
         outputs = model(x_batch)
         loss = criterion(outputs, y_batch)
+
         print(f"Test Loss: {loss.item():.4f}")
 
 # Save model
