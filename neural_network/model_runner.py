@@ -13,21 +13,17 @@ from model import AntennaPredictorModel
 
 
 # Load model metadata
-metadata_filename = MODEL_FILENAME.replace('.pth', '_metadata.json')
-with open(MODEL_DIRECTORY + metadata_filename, 'r') as f:
+with open(MODEL_DIRECTORY + MODEL_NAME + '_metadata.json', 'r') as f:
     metadata = json.load(f)
 
-input_dim = metadata['input_dimensions']
-output_dim = metadata['output_dimensions']
-
 # Load model
-model = AntennaPredictorModel(input_dim, output_dim)
-model.load_state_dict(torch.load(MODEL_DIRECTORY + MODEL_FILENAME))
+input_dim, hidden_dim, output_dim = metadata['dimensions'].values()
+model = AntennaPredictorModel(input_dim, hidden_dim, output_dim)
+model.load_state_dict(torch.load(metadata['files']['model_filepath']))
 model.eval()
 
 # Load data loader
-loader = AntennaDataHandler(metadata['data_filename'], input_dim, output_dim)
-loader.load_scalers()
+loader = AntennaDataHandler(metadata['data_name'])
 
 # Run model with user input
 while True:

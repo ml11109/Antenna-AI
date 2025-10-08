@@ -19,8 +19,8 @@ from model import AntennaPredictorModel
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load and preprocess data
-loader = AntennaDataHandler(DATA_FILENAME, INPUT_DIM, OUTPUT_DIM)
-X_data, y_data = loader.load_data()
+loader = AntennaDataHandler(DATA_NAME)
+X_data, y_data = loader.load_data(INPUT_DIM, OUTPUT_DIM)
 X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
 train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
 test_dataset = TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
@@ -28,7 +28,7 @@ train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=
 test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Model, loss function, and optimizer
-model = AntennaPredictorModel(INPUT_DIM, OUTPUT_DIM).to(device)
+model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -44,8 +44,8 @@ for epoch in range(NUM_EPOCHS):
         optimizer.step()
         optimizer.zero_grad()
 
-        if epoch % 20 == 0 and i % 20 == 0:
-            print(f'Epoch: {epoch}, Iteration: {i}, Loss: {loss.item():.4f}')
+        if epoch % 20 == 0 and i == 0:
+            print(f'Epoch: {epoch}, Loss: {loss.item():.4f}')
 
 # Evaluation
 with torch.no_grad():
@@ -64,24 +64,33 @@ with torch.no_grad():
 
 # Save model
 os.makedirs(MODEL_DIRECTORY, exist_ok=True)
-torch.save(model.state_dict(), MODEL_DIRECTORY + MODEL_FILENAME)
+torch.save(model.state_dict(), MODEL_DIRECTORY + MODEL_NAME + '.pth')
 loader.save_scalers()
 
 # Save model metadata
 metadata = {
-    'input_dimensions': INPUT_DIM,
-    'output_dimensions': OUTPUT_DIM,
-    'data_filename': DATA_FILENAME,
-    'model_filename': MODEL_FILENAME,
-    'data_path': DATA_DIRECTORY + DATA_FILENAME,
-    'model_path': MODEL_DIRECTORY + MODEL_FILENAME,
+    'model_name': MODEL_NAME,
+    'data_name': DATA_NAME,
+    'dimensions': {
+        'input': INPUT_DIM,
+        'hidden': HIDDEN_DIM,
+        'output': OUTPUT_DIM
+    },
+    'files': {
+        'data_filepath': DATA_DIRECTORY + DATA_NAME + '.csv',
+        'model_filepath': MODEL_DIRECTORY + MODEL_NAME + '.pth',
+        'scaler_x_filepath': SCALER_DIRECTORY + DATA_NAME + '_x_scaler.pkl',
+        'scaler_y_filepath': SCALER_DIRECTORY + DATA_NAME + '_y_scaler.pkl'
+    },
     'training_parameters': {
         'num_epochs': NUM_EPOCHS,
         'batch_size': BATCH_SIZE,
         'learning_rate': LEARNING_RATE
+    },
+    'results': {
+        'test_loss': test_loss
     }
 }
 
-metadata_filename = MODEL_FILENAME.replace('.pth', '_metadata.json')
-with open(MODEL_DIRECTORY + metadata_filename, 'w') as f:
+with open(MODEL_DIRECTORY + MODEL_NAME + '_metadata.json', 'w') as f:
     json.dump(metadata, f, indent=4)
