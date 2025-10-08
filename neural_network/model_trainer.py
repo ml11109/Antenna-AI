@@ -32,6 +32,22 @@ model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
+# Compute test loss
+def get_test_loss():
+    with torch.no_grad():
+        loss_sum = 0.0
+
+        for x_batch, y_batch in test_loader:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            outputs = model(x_batch)
+            loss = criterion(outputs, y_batch)
+            loss_sum += loss.item()
+
+        return loss_sum / len(test_loader)
+
+
 # Training loop
 for epoch in range(NUM_EPOCHS):
     for i, (x_batch, y_batch) in enumerate(train_loader):
@@ -45,22 +61,9 @@ for epoch in range(NUM_EPOCHS):
         optimizer.zero_grad()
 
         if epoch % 20 == 0 and i == 0:
-            print(f'Epoch: {epoch}, Loss: {loss.item():.4f}')
+            print(f'Epoch: {epoch}, Loss: {loss.item():.4f}, Test Loss: {get_test_loss():.4f}')
 
-# Evaluation
-with torch.no_grad():
-    loss_sum = 0.0
-
-    for x_batch, y_batch in test_loader:
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        outputs = model(x_batch)
-        loss = criterion(outputs, y_batch)
-        loss_sum += loss.item()
-
-    test_loss = loss_sum / len(test_loader)
-    print(f'Test Loss: {test_loss:.4f}')
+print(f'Final Test Loss: {get_test_loss():.4f}')
 
 # Save model
 os.makedirs(MODEL_DIRECTORY, exist_ok=True)

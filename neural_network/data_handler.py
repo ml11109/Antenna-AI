@@ -6,7 +6,7 @@ import os
 
 import joblib
 import pandas as pd
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 from constants import *
 
@@ -59,6 +59,6 @@ class AntennaDataHandler:
             self.new_scalers = False
 
         except FileNotFoundError:
-            self.scaler_x = MinMaxScaler()
+            self.scaler_x = StandardScaler()
             self.scaler_y = StandardScaler()
             self.new_scalers = True
