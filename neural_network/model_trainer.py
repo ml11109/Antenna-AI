@@ -13,7 +13,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from constants import *
 from data_handler import AntennaDataHandler
 from model import AntennaPredictorModel
-
+from neural_network.early_stopping import EarlyStopping
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,35 +21,23 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Load and preprocess data
 loader = AntennaDataHandler(DATA_NAME)
 X_data, y_data = loader.load_data(INPUT_DIM, OUTPUT_DIM)
-X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
+X_temp, X_test, y_temp, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
+X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=0)
 train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
+val_dataset = TensorDataset(torch.tensor(X_val, dtype=torch.float32), torch.tensor(y_val, dtype=torch.float32))
 test_dataset = TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
 train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Model, loss function, and optimizer
 model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+early_stopping = EarlyStopping(patience=PATIENCE, min_delta=MIN_DELTA, restore_best_weights=True)
 
-# Compute test loss
-def get_test_loss():
-    with torch.no_grad():
-        loss_sum = 0.0
-
-        for x_batch, y_batch in test_loader:
-            x_batch = x_batch.to(device)
-            y_batch = y_batch.to(device)
-
-            outputs = model(x_batch)
-            loss = criterion(outputs, y_batch)
-            loss_sum += loss.item()
-
-        return loss_sum / len(test_loader)
-
-
-# Training loop
-for epoch in range(NUM_EPOCHS):
+def train_epoch():
+    train_loss_sum = 0.0
     for i, (x_batch, y_batch) in enumerate(train_loader):
         x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
@@ -60,10 +48,44 @@ for epoch in range(NUM_EPOCHS):
         optimizer.step()
         optimizer.zero_grad()
 
-        if epoch % 20 == 0 and i == 0:
-            print(f'Epoch: {epoch}, Loss: {loss.item():.4f}, Test Loss: {get_test_loss():.4f}')
+        train_loss_sum += loss.item()
 
-print(f'Final Test Loss: {get_test_loss():.4f}')
+    return train_loss_sum / len(train_loader)
+
+# Compute test loss
+def get_loss(loader):
+    with torch.no_grad():
+        loss_sum = 0.0
+
+        for x_batch, y_batch in loader:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            outputs = model(x_batch)
+            loss = criterion(outputs, y_batch)
+            loss_sum += loss.item()
+
+        return loss_sum / len(loader)
+
+
+# Training loop
+for epoch in range(NUM_EPOCHS):
+    model.train()
+    train_loss = train_epoch()
+
+    model.eval()
+    val_loss = get_loss(val_loader)
+
+    if epoch % 10 == 0:
+        print(f'Epoch: {epoch}, Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
+
+    if EARLY_STOPPING and early_stopping(val_loss, model):
+        print(f'Early stopping at epoch {epoch}')
+        break
+
+model.eval()
+test_loss = get_loss(test_loader)
+print(f'Test Loss: {test_loss:.4f}')
 
 # Save model
 os.makedirs(MODEL_DIRECTORY, exist_ok=True)
