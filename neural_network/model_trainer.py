@@ -16,7 +16,7 @@ from model import AntennaPredictorModel
 
 
 # Device configuration
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load and preprocess data
 loader = AntennaDataHandler(DATA_FILENAME, INPUT_DIM, OUTPUT_DIM)
@@ -45,18 +45,22 @@ for epoch in range(NUM_EPOCHS):
         optimizer.zero_grad()
 
         if epoch % 20 == 0 and i % 20 == 0:
-            print(f"Epoch: {epoch}, Iteration: {i}, Loss: {loss.item():.4f}")
+            print(f'Epoch: {epoch}, Iteration: {i}, Loss: {loss.item():.4f}')
 
 # Evaluation
 with torch.no_grad():
+    loss_sum = 0.0
+
     for x_batch, y_batch in test_loader:
         x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
 
         outputs = model(x_batch)
         loss = criterion(outputs, y_batch)
+        loss_sum += loss.item()
 
-        print(f"Test Loss: {loss.item():.4f}")
+    test_loss = loss_sum / len(test_loader)
+    print(f'Test Loss: {test_loss:.4f}')
 
 # Save model
 os.makedirs(MODEL_DIRECTORY, exist_ok=True)

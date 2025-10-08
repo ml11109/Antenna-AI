@@ -29,11 +29,11 @@ class AntennaDataHandler:
             return x, y
 
         except FileNotFoundError:
-            print(f"File not found: {DATA_DIRECTORY}{self.filename}")
+            print(f'File not found: {DATA_DIRECTORY}{self.filename}')
             return None, None
 
         except IndexError:
-            print(f"Index error while loading data from {DATA_DIRECTORY}{self.filename}")
+            print(f'Index error while loading data from {DATA_DIRECTORY}{self.filename}')
             return None, None
 
     def scale_x(self, x):
@@ -58,6 +58,6 @@ class AntennaDataHandler:
             self.scaler_y = joblib.load(MODEL_DIRECTORY + self.filename.replace('.csv', '_y_scaler.pkl'))
 
         except FileNotFoundError:
-            print(f"File not found: {MODEL_DIRECTORY}{self.filename.replace('.csv', '_x_scaler.pkl')} or {MODEL_DIRECTORY}{self.filename.replace('.csv', '_y_scaler.pkl')}")
+            print(f'File not found: {MODEL_DIRECTORY}{self.filename.replace('.csv', '_x_scaler.pkl')} or {MODEL_DIRECTORY}{self.filename.replace('.csv', '_y_scaler.pkl')}')
             self.scaler_x = MinMaxScaler()
             self.scaler_y = StandardScaler()
