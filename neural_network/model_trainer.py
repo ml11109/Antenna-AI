@@ -8,6 +8,7 @@ import os
 import torch
 from sklearn.model_selection import train_test_split
 from torch import nn, optim
+from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 
 from constants import *
@@ -31,10 +32,23 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=Fals
 test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Model, loss function, and optimizer
-model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM).to(device)
+model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT_RATE, USE_DROPOUT).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-early_stopping = EarlyStopping(patience=PATIENCE, min_delta=MIN_DELTA, restore_best_weights=True)
+
+early_stopping = None
+if EARLY_STOPPING:
+    early_stopping = EarlyStopping(patience=PATIENCE, min_delta=MIN_DELTA, restore_best_weights=True)
+
+scheduler = None
+if USE_SCHEDULER:
+    scheduler = lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='min',
+        factor=SCHEDULER_FACTOR,
+        patience=SCHEDULER_PATIENCE,
+        min_lr=SCHEDULER_MIN_LR
+    )
 
 def train_epoch():
     train_loss_sum = 0.0
@@ -76,12 +90,17 @@ for epoch in range(NUM_EPOCHS):
     model.eval()
     val_loss = get_loss(val_loader)
 
-    if epoch % 10 == 0:
-        print(f'Epoch: {epoch}, Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
-
-    if EARLY_STOPPING and early_stopping(val_loss, model):
+    if early_stopping and early_stopping(val_loss, model):
         print(f'Early stopping at epoch {epoch}')
         break
+
+    if scheduler:
+        scheduler.step(val_loss)
+
+    if epoch % 10 == 0:
+        current_lr = optimizer.param_groups[0]['lr']
+        print(f'Epoch: {epoch}, Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {current_lr:.6f}')
+
 
 model.eval()
 test_loss = get_loss(test_loader)
@@ -96,6 +115,9 @@ loader.save_scalers()
 metadata = {
     'model_name': MODEL_NAME,
     'data_name': DATA_NAME,
+    'results': {
+        'test_loss': test_loss
+    },
     'dimensions': {
         'input': INPUT_DIM,
         'hidden': HIDDEN_DIM,
@@ -112,8 +134,15 @@ metadata = {
         'batch_size': BATCH_SIZE,
         'learning_rate': LEARNING_RATE
     },
-    'results': {
-        'test_loss': test_loss
+    'early_stopping': {
+        'patience': PATIENCE,
+        'min_delta': MIN_DELTA
+    },
+    'learning_rate_scheduler': {
+        'use_scheduler': USE_SCHEDULER,
+        'patience': SCHEDULER_PATIENCE,
+        'factor': SCHEDULER_FACTOR,
+        'min_lr': SCHEDULER_MIN_LR
     }
 }
 
