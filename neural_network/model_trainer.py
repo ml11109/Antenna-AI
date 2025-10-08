@@ -118,21 +118,15 @@ metadata = {
     'results': {
         'test_loss': test_loss
     },
-    'dimensions': {
-        'input': INPUT_DIM,
-        'hidden': HIDDEN_DIM,
-        'output': OUTPUT_DIM
-    },
-    'files': {
-        'data_filepath': DATA_DIRECTORY + DATA_NAME + '.csv',
-        'model_filepath': MODEL_DIRECTORY + MODEL_NAME + '.pth',
-        'scaler_x_filepath': SCALER_DIRECTORY + DATA_NAME + '_x_scaler.pkl',
-        'scaler_y_filepath': SCALER_DIRECTORY + DATA_NAME + '_y_scaler.pkl'
-    },
     'training_parameters': {
         'num_epochs': NUM_EPOCHS,
         'batch_size': BATCH_SIZE,
         'learning_rate': LEARNING_RATE
+    },
+    'dimensions': {
+        'input': INPUT_DIM,
+        'hidden': HIDDEN_DIM,
+        'output': OUTPUT_DIM
     },
     'early_stopping': {
         'patience': PATIENCE,
@@ -143,6 +137,16 @@ metadata = {
         'patience': SCHEDULER_PATIENCE,
         'factor': SCHEDULER_FACTOR,
         'min_lr': SCHEDULER_MIN_LR
+    },
+    'dropout': {
+        'use_dropout': USE_DROPOUT,
+        'dropout_rate': DROPOUT_RATE
+    },
+    'files': {
+        'data_filepath': DATA_DIRECTORY + DATA_NAME + '.csv',
+        'model_filepath': MODEL_DIRECTORY + MODEL_NAME + '.pth',
+        'scaler_x_filepath': SCALER_DIRECTORY + DATA_NAME + '_x_scaler.pkl',
+        'scaler_y_filepath': SCALER_DIRECTORY + DATA_NAME + '_y_scaler.pkl'
     }
 }
 
