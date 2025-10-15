@@ -1,3 +1,7 @@
+"""
+Early stopping class for training neural networks
+"""
+
 class EarlyStopping:
     def __init__(self, patience=7, min_delta=0, restore_best_weights=True):
         """

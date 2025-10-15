@@ -4,6 +4,7 @@ Trains a neural network to predict antenna simulation outputs based on input par
 
 import json
 import os
+from pathlib import Path
 
 import torch
 from sklearn.model_selection import train_test_split
@@ -11,9 +12,9 @@ from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 
-from constants import *
-from data_handler import AntennaDataHandler
-from model import AntennaPredictorModel
+from neural_network.constants import *
+from neural_network.data_handler import AntennaDataHandler
+from neural_network.model import AntennaPredictorModel
 from neural_network.early_stopping import EarlyStopping
 
 # Device configuration
@@ -32,13 +33,23 @@ val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=Fals
 test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Model definition
-model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT_RATE, USE_DROPOUT).to(device)
+model = AntennaPredictorModel(
+    input_dim=INPUT_DIM,
+    hidden_dim=HIDDEN_DIM,
+    output_dim=OUTPUT_DIM,
+    dropout_rate=DROPOUT_RATE,
+    use_dropout=USE_DROPOUT
+).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 early_stopping = None
 if EARLY_STOPPING:
-    early_stopping = EarlyStopping(patience=PATIENCE, min_delta=MIN_DELTA, restore_best_weights=True)
+    early_stopping = EarlyStopping(
+        patience=PATIENCE,
+        min_delta=MIN_DELTA,
+        restore_best_weights=True
+    )
 
 scheduler = None
 if USE_SCHEDULER:
@@ -51,9 +62,9 @@ if USE_SCHEDULER:
     )
 
 # Training loop
-def train_epoch():
+def train_epoch(loader):
     train_loss_sum = 0.0
-    for i, (x_batch, y_batch) in enumerate(train_loader):
+    for i, (x_batch, y_batch) in enumerate(loader):
         x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
 
@@ -65,7 +76,7 @@ def train_epoch():
 
         train_loss_sum += loss.item()
 
-    return train_loss_sum / len(train_loader)
+    return train_loss_sum / len(loader)
 
 def get_loss(loader):
     with torch.no_grad():
@@ -84,7 +95,7 @@ def get_loss(loader):
 epoch = 0
 for epoch in range(NUM_EPOCHS):
     model.train()
-    train_loss = train_epoch()
+    train_loss = train_epoch(train_loader)
 
     model.eval()
     val_loss = get_loss(val_loader)
@@ -106,8 +117,12 @@ test_loss = get_loss(test_loader)
 print(f'Test Loss: {test_loss:.4f}')
 
 # Save model and metadata
-os.makedirs(MODEL_DIRECTORY, exist_ok=True)
-torch.save(model.state_dict(), MODEL_DIRECTORY + MODEL_NAME + '.pth')
+model_directory = Path(__file__).resolve().parent.parent / MODEL_DIRECTORY
+model_path = model_directory / (MODEL_NAME + '.pth')
+metadata_path = model_directory / (MODEL_NAME + '_metadata.json')
+
+os.makedirs(model_directory, exist_ok=True)
+torch.save(model.state_dict(), model_path)
 data_handler.save_scalers()
 
 metadata = {
@@ -127,6 +142,7 @@ metadata = {
         'output': OUTPUT_DIM
     },
     'early_stopping': {
+        'use_early_stopping': EARLY_STOPPING,
         'patience': PATIENCE,
         'min_delta': MIN_DELTA,
         'final_epoch': epoch
@@ -142,12 +158,12 @@ metadata = {
         'dropout_rate': DROPOUT_RATE
     },
     'files': {
-        'data_filepath': DATA_DIRECTORY + DATA_NAME + '.csv',
-        'model_filepath': MODEL_DIRECTORY + MODEL_NAME + '.pth',
-        'scaler_x_filepath': SCALER_DIRECTORY + DATA_NAME + '_x_scaler.pkl',
-        'scaler_y_filepath': SCALER_DIRECTORY + DATA_NAME + '_y_scaler.pkl'
+        'data_filepath': data_handler.data_path,
+        'model_filepath': model_path,
+        'scaler_x_filepath': data_handler.scaler_x_path,
+        'scaler_y_filepath': data_handler.scaler_y_path
     }
 }
 
-with open(MODEL_DIRECTORY + MODEL_NAME + '_metadata.json', 'w') as f:
+with open(metadata_path, 'w') as f:
     json.dump(metadata, f, indent=4)

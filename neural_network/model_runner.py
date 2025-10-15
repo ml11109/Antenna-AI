@@ -2,25 +2,27 @@
 Runs the trained neural network
 """
 
-import numpy
+import numpy as np
 import torch
 
-from constants import *
-from model_loader import ModelLoader
+from neural_network.constants import *
+from neural_network.model_loader import load_neural_network
 
-# Load model and data handler
-model_loader = ModelLoader(MODEL_NAME, MODEL_DIRECTORY)
-model = model_loader.load_model()
-data_handler = model_loader.load_data_handler()
+model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)
+input_dim = metadata['dimensions']['input']
 
-# Run model with user input
 while True:
     try:
-        input_data = input('Enter input data (comma-separated): ')
+        input_data = input(f'Enter input data (comma-separated, {input_dim} values): ')
+
         if input_data == 'quit':
             break
 
-        input_data = numpy.array([float(x) for x in input_data.split(',')]).reshape(1, -1)
+        input_data = np.array([float(x) for x in input_data.split(',')]).reshape(1, -1)
+
+        if input_data.shape[1] != input_dim:
+            raise ValueError
+
         input_data = data_handler.scale_x(input_data)
         input_data = torch.tensor(input_data, dtype=torch.float32)
         output_data = model(input_data)
@@ -28,4 +30,4 @@ while True:
         print(f'Output data: {output_data[0]}')
 
     except ValueError:
-        print('Invalid input data. Please enter comma-separated numbers.')
+        print('Invalid input. Please try again.')

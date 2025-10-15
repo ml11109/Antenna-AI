@@ -3,7 +3,7 @@ Defines the neural network model for antenna simulation output prediction
 """
 
 from torch import nn
-from constants import USE_DROPOUT, DROPOUT_RATE
+from neural_network.constants import USE_DROPOUT, DROPOUT_RATE
 
 
 class AntennaPredictorModel(nn.Module):

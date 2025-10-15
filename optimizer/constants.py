@@ -2,6 +2,6 @@
 Constants for optimizer
 """
 
-MODEL_NAME = 'john_3'
-MODEL_DIRECTORY = 'neural_network/models/'
+MODEL_NAME = 'john_5'
+MODEL_DIRECTORY = 'models'
 
