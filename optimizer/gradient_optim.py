@@ -4,7 +4,9 @@ Backprop on design parameters using trained neural network for evaluation
 
 import numpy as np
 import torch
+from torch.optim import lr_scheduler
 
+from neural_network.early_stopping import EarlyStopping
 from optimizer.optim_constants import *
 from neural_network.model_loader import load_neural_network
 
@@ -15,6 +17,24 @@ input_dim = metadata['dimensions']['input']
 # Initialize design parameters
 params_scaled = torch.tensor(np.zeros(input_dim).reshape(1, -1), dtype=torch.float32, requires_grad=True)
 optimizer = torch.optim.Adam([params_scaled], lr=LEARNING_RATE)
+
+early_stopping = None
+if EARLY_STOPPING:
+    early_stopping = EarlyStopping(
+        patience=PATIENCE,
+        min_delta=MIN_DELTA,
+        restore_best_weights=True
+    )
+
+scheduler = None
+if USE_SCHEDULER:
+    scheduler = lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='min',
+        factor=SCHEDULER_FACTOR,
+        patience=SCHEDULER_PATIENCE,
+        min_lr=SCHEDULER_MIN_LR
+    )
 
 # Get scaler parameters
 mean_y = torch.tensor(data_handler.scaler_y.mean_, dtype=torch.float32)
@@ -45,12 +65,22 @@ for epoch in range(NUM_EPOCHS):
     with torch.no_grad():
         params_scaled[:] = limit_params(params_scaled)
 
-    if epoch % 10 == 0:
+    if early_stopping and early_stopping(loss, model):
+        print(f'Early stopping at epoch {epoch}')
+        break
+
+    if scheduler:
+        scheduler.step(loss)
+
+    if epoch % 100 == 0:
         outputs = data_handler.inverse_scale_y(model(params_scaled).detach().numpy())
         params_unscaled = data_handler.inverse_scale_x(params_scaled.detach().numpy())
-        print(f'Epoch: {epoch}, Parameters: {[round(param.item(), 4) for param in params_unscaled.flatten()]}, Outputs: {[round(output.item(), 4) for output in outputs.flatten()]}, Loss: {loss.item()}')
+        print(f'Epoch: {epoch}, '
+              f'Parameters: {[round(param.item(), 4) for param in params_unscaled.flatten()]}, '
+              f'Output: {loss.item(): .4f}, '
+              f'LR: {optimizer.param_groups[0]["lr"]:.6f}')
 
 outputs = data_handler.inverse_scale_y(model(params_scaled).detach().numpy())
 params_unscaled = data_handler.inverse_scale_x(params_scaled.detach().numpy())
 print('Parameters:', [round(param.item(), 4) for param in params_unscaled.flatten()])
-print('Outputs:', [round(output.item(), 4) for output in outputs.flatten()])
+print('Output:', f'{get_loss(params_scaled).item(): .4f}')
