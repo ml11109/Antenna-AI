@@ -20,8 +20,8 @@ from neural_network.early_stopping import EarlyStopping
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load and preprocess data
-loader = AntennaDataHandler(DATA_NAME)
-X_data, y_data = loader.load_data(INPUT_DIM, OUTPUT_DIM)
+data_handler = AntennaDataHandler(DATA_NAME)
+X_data, y_data = data_handler.load_data(INPUT_DIM, OUTPUT_DIM)
 X_temp, X_test, y_temp, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=0)
 train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
@@ -31,7 +31,7 @@ train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=
 val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# Model, loss function, and optimizer
+# Model definition
 model = AntennaPredictorModel(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT_RATE, USE_DROPOUT).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
@@ -50,6 +50,7 @@ if USE_SCHEDULER:
         min_lr=SCHEDULER_MIN_LR
     )
 
+# Training loop
 def train_epoch():
     train_loss_sum = 0.0
     for i, (x_batch, y_batch) in enumerate(train_loader):
@@ -66,7 +67,6 @@ def train_epoch():
 
     return train_loss_sum / len(train_loader)
 
-# Compute test loss
 def get_loss(loader):
     with torch.no_grad():
         loss_sum = 0.0
@@ -81,8 +81,7 @@ def get_loss(loader):
 
         return loss_sum / len(loader)
 
-
-# Training loop
+epoch = 0
 for epoch in range(NUM_EPOCHS):
     model.train()
     train_loss = train_epoch()
@@ -101,17 +100,16 @@ for epoch in range(NUM_EPOCHS):
         current_lr = optimizer.param_groups[0]['lr']
         print(f'Epoch: {epoch}, Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {current_lr:.6f}')
 
-
+# Compute test loss
 model.eval()
 test_loss = get_loss(test_loader)
 print(f'Test Loss: {test_loss:.4f}')
 
-# Save model
+# Save model and metadata
 os.makedirs(MODEL_DIRECTORY, exist_ok=True)
 torch.save(model.state_dict(), MODEL_DIRECTORY + MODEL_NAME + '.pth')
-loader.save_scalers()
+data_handler.save_scalers()
 
-# Save model metadata
 metadata = {
     'model_name': MODEL_NAME,
     'data_name': DATA_NAME,
@@ -130,7 +128,8 @@ metadata = {
     },
     'early_stopping': {
         'patience': PATIENCE,
-        'min_delta': MIN_DELTA
+        'min_delta': MIN_DELTA,
+        'final_epoch': epoch
     },
     'learning_rate_scheduler': {
         'use_scheduler': USE_SCHEDULER,

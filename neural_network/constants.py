@@ -2,11 +2,11 @@
 Constants for neural network training and testing
 """
 
-MODEL_NAME = 'john_2'
+MODEL_NAME = 'john_3'
 DATA_NAME = 'data_1'
 
 # Training parameters
-NUM_EPOCHS = 300
+NUM_EPOCHS = 200
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 TEST_SIZE = 0.2
@@ -15,7 +15,7 @@ HIDDEN_DIM = [128, 128, 128]
 OUTPUT_DIM = 1
 
 # Early stopping parameters
-EARLY_STOPPING = True
+EARLY_STOPPING = False
 PATIENCE = 30
 MIN_DELTA = 0.0001
 
