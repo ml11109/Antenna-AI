@@ -7,6 +7,10 @@ from pathlib import Path
 MODEL_NAME = 'john_5'
 DATA_NAME = 'data_1'
 
+MODEL_DIRECTORY = Path('models')
+DATA_DIRECTORY = Path('data')
+SCALER_DIRECTORY = Path('scalers')
+
 # Training parameters
 NUM_EPOCHS = 500
 BATCH_SIZE = 32
@@ -30,9 +34,3 @@ SCHEDULER_MIN_LR = 1e-8
 # Dropout parameters
 USE_DROPOUT = True
 DROPOUT_RATE = 0.1
-
-# Data directories
-WORKING_DIRECTORY = Path(__file__).resolve().parent
-MODEL_DIRECTORY = WORKING_DIRECTORY / 'models'
-DATA_DIRECTORY = WORKING_DIRECTORY / 'data'
-SCALER_DIRECTORY = WORKING_DIRECTORY / 'scalers'

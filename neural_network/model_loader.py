@@ -6,7 +6,7 @@ import json
 
 import torch
 
-from constants import *
+from neural_network.nn_constants import *
 from neural_network.data_handler import AntennaDataHandler
 from neural_network.model import AntennaPredictorModel
 

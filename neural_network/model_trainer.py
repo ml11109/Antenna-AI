@@ -4,7 +4,6 @@ Trains a neural network to predict antenna simulation outputs based on input par
 
 import json
 import os
-from pathlib import Path
 
 import torch
 from sklearn.model_selection import train_test_split
@@ -12,7 +11,7 @@ from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 
-from constants import *
+from neural_network.nn_constants import *
 from neural_network.data_handler import AntennaDataHandler
 from neural_network.model import AntennaPredictorModel
 from neural_network.early_stopping import EarlyStopping
@@ -61,7 +60,6 @@ if USE_SCHEDULER:
         min_lr=SCHEDULER_MIN_LR
     )
 
-# Training loop
 def train_epoch(loader):
     train_loss_sum = 0.0
     for i, (x_batch, y_batch) in enumerate(loader):
@@ -92,6 +90,7 @@ def get_loss(loader):
 
         return loss_sum / len(loader)
 
+# Training loop
 epoch = 0
 for epoch in range(NUM_EPOCHS):
     model.train()

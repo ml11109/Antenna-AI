@@ -3,13 +3,12 @@ Loads and cleans data for neural network training
 """
 
 import os
-from pathlib import Path
 
 import joblib
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from constants import *
+from neural_network.nn_constants import *
 
 
 class AntennaDataHandler:

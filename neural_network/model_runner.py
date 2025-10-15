@@ -5,7 +5,7 @@ Runs the trained neural network
 import numpy as np
 import torch
 
-from constants import *
+from neural_network.nn_constants import *
 from neural_network.model_loader import load_neural_network
 
 model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)
@@ -26,7 +26,7 @@ while True:
         input_data = data_handler.scale_x(input_data)
         input_data = torch.tensor(input_data, dtype=torch.float32)
         output_data = model(input_data)
-        output_data = data_handler.inverse_scale_y(output_data.detach().cpu().numpy())
+        output_data = data_handler.inverse_scale_y(output_data.detach().numpy())
         print(f'Output data: {output_data[0]}')
 
     except ValueError:
