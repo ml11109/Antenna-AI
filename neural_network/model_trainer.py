@@ -12,7 +12,7 @@ from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 
-from neural_network.constants import *
+from constants import *
 from neural_network.data_handler import AntennaDataHandler
 from neural_network.model import AntennaPredictorModel
 from neural_network.early_stopping import EarlyStopping
@@ -156,12 +156,6 @@ metadata = {
     'dropout': {
         'use_dropout': USE_DROPOUT,
         'dropout_rate': DROPOUT_RATE
-    },
-    'files': {
-        'data_filepath': data_handler.data_path,
-        'model_filepath': model_path,
-        'scaler_x_filepath': data_handler.scaler_x_path,
-        'scaler_y_filepath': data_handler.scaler_y_path
     }
 }
 

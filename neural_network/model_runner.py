@@ -5,7 +5,7 @@ Runs the trained neural network
 import numpy as np
 import torch
 
-from neural_network.constants import *
+from constants import *
 from neural_network.model_loader import load_neural_network
 
 model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)

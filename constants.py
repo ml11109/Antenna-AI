@@ -2,6 +2,8 @@
 Constants for neural network training and testing
 """
 
+from pathlib import Path
+
 MODEL_NAME = 'john_5'
 DATA_NAME = 'data_1'
 
@@ -30,6 +32,7 @@ USE_DROPOUT = True
 DROPOUT_RATE = 0.1
 
 # Data directories
-MODEL_DIRECTORY = 'models'
-DATA_DIRECTORY = 'data'
-SCALER_DIRECTORY = 'scalers'
+WORKING_DIRECTORY = Path(__file__).resolve().parent
+MODEL_DIRECTORY = WORKING_DIRECTORY / 'models'
+DATA_DIRECTORY = WORKING_DIRECTORY / 'data'
+SCALER_DIRECTORY = WORKING_DIRECTORY / 'scalers'

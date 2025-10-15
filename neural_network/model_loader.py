@@ -3,19 +3,20 @@ Load trained neural network
 """
 
 import json
-import torch
-from pathlib import Path
 
-from neural_network.constants import *
+import torch
+
+from constants import *
 from neural_network.data_handler import AntennaDataHandler
 from neural_network.model import AntennaPredictorModel
 
 
 class ModelLoader:
     def __init__(self, model_name=MODEL_NAME, model_directory=MODEL_DIRECTORY):
-        self.model_directory = Path(__file__).resolve().parent.parent / model_directory
-        self.model_path = self.model_directory / (model_name + '.pth')
-        self.metadata_path = self.model_directory / (model_name + '_metadata.json')
+        self.model_name = model_name
+        self.model_directory = model_directory
+        self.model_path = self.model_directory / (self.model_name + '.pth')
+        self.metadata_path = self.model_directory / (self.model_name + '_metadata.json')
 
         self.metadata = None
         with open(self.metadata_path, 'r') as f:

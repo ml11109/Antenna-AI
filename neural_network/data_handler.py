@@ -9,13 +9,13 @@ import joblib
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from neural_network.constants import *
+from constants import *
 
 
 class AntennaDataHandler:
     def __init__(self, data_name, data_directory=DATA_DIRECTORY, scaler_directory=SCALER_DIRECTORY):
-        self.data_directory = Path(__file__).resolve().parent.parent / data_directory
-        self.scaler_directory = Path(__file__).resolve().parent.parent / scaler_directory
+        self.data_directory = data_directory
+        self.scaler_directory = scaler_directory
 
         self.data_path = self.data_directory / (data_name + '.csv')
         self.scaler_x_path = self.scaler_directory / (data_name + '_x_scaler.pkl')
