@@ -6,7 +6,9 @@ import os
 
 import joblib
 import pandas as pd
+import torch
 from sklearn.preprocessing import StandardScaler
+from torch import Tensor
 
 from neural_network.nn_constants import *
 
@@ -25,6 +27,11 @@ class AntennaDataHandler:
         self.new_scalers = None
         self.load_scalers()
 
+        self.scale_x = lambda x: self.scaling_operation(x, self.scaler_x.transform)
+        self.scale_y = lambda y: self.scaling_operation(y, self.scaler_y.transform)
+        self.inverse_scale_x = lambda x: self.scaling_operation(x, self.scaler_x.inverse_transform)
+        self.inverse_scale_y = lambda y: self.scaling_operation(y, self.scaler_y.inverse_transform)
+
     def load_data(self, input_dim, output_dim):
         df = pd.read_csv(self.data_path)
         x = df.iloc[:, :input_dim].values
@@ -41,17 +48,34 @@ class AntennaDataHandler:
 
         return x, y
 
-    def scale_x(self, x):
-        return self.scaler_x.transform(x)
+    def scaling_operation(self, data, op):
+        if isinstance(data, Tensor):
+            data = data.detach().numpy()
+        return torch.from_numpy(op(data))
 
-    def scale_y(self, y):
-        return self.scaler_y.transform(y)
-
-    def inverse_scale_x(self, x):
-        return self.scaler_x.inverse_transform(x)
-
-    def inverse_scale_y(self, y):
-        return self.scaler_y.inverse_transform(y)
+    # def scale_x(self, x):
+    #     return self.scaling_operation(x, self.scaler_x.transform)
+    #
+    # def scale_y(self, y):
+    #     if isinstance(y, Tensor):
+    #         y = y.detach().numpy()
+    #         return Tensor(self.scaler_y.transform(y))
+    #
+    #     return self.scaler_y.transform(y)
+    #
+    # def inverse_scale_x(self, x):
+    #     if isinstance(x, Tensor):
+    #         x = x.detach().numpy()
+    #         return Tensor(self.scaler_x.inverse_transform(x))
+    #
+    #     return self.scaler_x.inverse_transform(x)
+    #
+    # def inverse_scale_y(self, y):
+    #     if isinstance(y, Tensor):
+    #         y = y.detach().numpy()
+    #         return Tensor(self.scaler_y.inverse_transform(y))
+    #
+    #     return self.scaler_y.inverse_transform(y)
 
     def save_scalers(self):
         os.makedirs(self.scaler_directory, exist_ok=True)

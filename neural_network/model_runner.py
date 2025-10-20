@@ -23,10 +23,8 @@ while True:
         if inputs.shape[1] != input_dim:
             raise ValueError
 
-        inputs = data_handler.scale_x(inputs)
-        inputs = torch.tensor(inputs, dtype=torch.float32)
-        outputs = model(inputs)
-        outputs = data_handler.inverse_scale_y(outputs.detach().numpy())
+        inputs = data_handler.scale_x(inputs).to(torch.float32)
+        outputs = data_handler.inverse_scale_y(model(inputs))
         print(f'Outputs: {outputs[0]}')
 
     except ValueError:

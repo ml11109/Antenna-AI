@@ -39,7 +39,7 @@ class LossTracker:
         if isinstance(model, Module):
             self.best_weights = model.state_dict().copy()
         else:
-            self.best_weights = model.clone()
+            self.best_weights = model.clone().detach()
 
     def load_best(self):
         return self.best_weights

@@ -1,20 +1,29 @@
 """
-Constants for optimizers
+Constants for optimizer
 """
 
+from math import sqrt
 from pathlib import Path
 
 MODEL_NAME = 'john_5'
 DATA_NAME = 'data_1'
 
+SIZE = 155
+
 PARAM_LIMITS = (
+    # min, max
     (250, 800), # frequency
-    (0, 155), # gap
+    (0, SIZE / sqrt(2)), # gap
     (0, 100000), # gap_width
     (0, 100000), # gap_length
     (0, 100000), # finger_width
     (0, 100000) # rect_breadth
 )
+
+RELATIVE_CONSTRAINTS = [
+    # index1, index2, min_ratio, max_ratio
+    (3, 4, 0, 1)   # gap length < finger width
+]
 
 MODEL_DIRECTORY = Path('models')
 DATA_DIRECTORY = Path('data')
@@ -24,7 +33,7 @@ PRINT_STATUS = True
 PRINT_INTERVAL = 100
 
 # Gradient optimization parameters
-NUM_EPOCHS = 10000
+NUM_EPOCHS = 1000
 LEARNING_RATE = 0.05
 
 # Early stopping parameters
