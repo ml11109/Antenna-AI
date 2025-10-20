@@ -43,10 +43,10 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 early_stopping = None
-if EARLY_STOPPING:
+if USE_EARLY_STOPPING:
     early_stopping = EarlyStopping(
-        patience=PATIENCE,
-        min_delta=MIN_DELTA,
+        patience=STOPPER_PATIENCE,
+        min_delta=STOPPER_MIN_DELTA,
         restore_best_weights=True
     )
 
@@ -141,9 +141,9 @@ metadata = {
         'output': OUTPUT_DIM
     },
     'early_stopping': {
-        'use_early_stopping': EARLY_STOPPING,
-        'patience': PATIENCE,
-        'min_delta': MIN_DELTA,
+        'use_early_stopping': USE_EARLY_STOPPING,
+        'patience': STOPPER_PATIENCE,
+        'min_delta': STOPPER_MIN_DELTA,
         'final_epoch': epoch
     },
     'learning_rate_scheduler': {

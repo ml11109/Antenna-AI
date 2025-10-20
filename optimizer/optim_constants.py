@@ -25,9 +25,9 @@ NUM_EPOCHS = 10000
 LEARNING_RATE = 0.05
 
 # Early stopping parameters
-EARLY_STOPPING = False
-PATIENCE = 30
-MIN_DELTA = 0.0001
+USE_EARLY_STOPPING = False
+STOPPER_PATIENCE = 30
+STOPPER_MIN_DELTA = 0.0001
 
 # Learning rate scheduling parameters
 USE_SCHEDULER = True

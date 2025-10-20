@@ -19,10 +19,10 @@ params_scaled = torch.tensor(np.zeros(input_dim).reshape(1, -1), dtype=torch.flo
 optimizer = torch.optim.Adam([params_scaled], lr=LEARNING_RATE)
 
 early_stopping = None
-if EARLY_STOPPING:
+if USE_EARLY_STOPPING:
     early_stopping = EarlyStopping(
-        patience=PATIENCE,
-        min_delta=MIN_DELTA,
+        patience=STOPPER_PATIENCE,
+        min_delta=STOPPER_MIN_DELTA,
         restore_best_weights=True
     )
 
@@ -80,6 +80,7 @@ for epoch in range(NUM_EPOCHS):
               f'Output: {loss.item(): .4f}, '
               f'LR: {optimizer.param_groups[0]["lr"]:.6f}')
 
+# Compute final output
 outputs = data_handler.inverse_scale_y(model(params_scaled).detach().numpy())
 params_unscaled = data_handler.inverse_scale_x(params_scaled.detach().numpy())
 print('Parameters:', [round(param.item(), 4) for param in params_unscaled.flatten()])

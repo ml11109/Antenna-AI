@@ -21,9 +21,9 @@ HIDDEN_DIM = [128, 128, 128]
 OUTPUT_DIM = 1
 
 # Early stopping parameters
-EARLY_STOPPING = False
-PATIENCE = 30
-MIN_DELTA = 0.0001
+USE_EARLY_STOPPING = False
+STOPPER_PATIENCE = 30
+STOPPER_MIN_DELTA = 0.0001
 
 # Learning rate scheduling parameters
 USE_SCHEDULER = True
