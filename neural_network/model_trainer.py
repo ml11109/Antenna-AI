@@ -14,7 +14,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from neural_network.nn_constants import *
 from neural_network.data_handler import AntennaDataHandler
 from neural_network.model import AntennaPredictorModel
-from neural_network.early_stopping import EarlyStopping
+from neural_network.loss_tracker import LossTracker
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -42,23 +42,19 @@ model = AntennaPredictorModel(
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-early_stopping = None
-if USE_EARLY_STOPPING:
-    early_stopping = EarlyStopping(
-        patience=STOPPER_PATIENCE,
-        min_delta=STOPPER_MIN_DELTA,
-        restore_best_weights=True
-    )
+loss_tracker = LossTracker(
+    early_stop=USE_EARLY_STOPPING,
+    patience=STOPPER_PATIENCE,
+    min_delta=STOPPER_MIN_DELTA
+)
 
-scheduler = None
-if USE_SCHEDULER:
-    scheduler = lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=SCHEDULER_FACTOR,
-        patience=SCHEDULER_PATIENCE,
-        min_lr=SCHEDULER_MIN_LR
-    )
+scheduler = lr_scheduler.ReduceLROnPlateau(
+    optimizer,
+    mode='min',
+    factor=SCHEDULER_FACTOR,
+    patience=SCHEDULER_PATIENCE,
+    min_lr=SCHEDULER_MIN_LR
+)
 
 def train_epoch(loader):
     train_loss_sum = 0.0
@@ -99,21 +95,22 @@ for epoch in range(NUM_EPOCHS):
     model.eval()
     val_loss = get_loss(val_loader)
 
-    if early_stopping and early_stopping(val_loss, model):
+    if loss_tracker(val_loss, model):
         print(f'Early stopping at epoch {epoch}')
         break
 
     if scheduler:
         scheduler.step(val_loss)
 
-    if epoch % 10 == 0:
-        current_lr = optimizer.param_groups[0]['lr']
-        print(f'Epoch: {epoch}, Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {current_lr:.6f}')
+    if PRINT_STATUS and epoch % PRINT_INTERVAL == 0:
+        lr = optimizer.param_groups[0]['lr']
+        print(f'Epoch: {epoch}, Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {lr:.6f}')
 
 # Compute test loss
+model.load_state_dict(loss_tracker.load_best())
 model.eval()
 test_loss = get_loss(test_loader)
-print(f'Test Loss: {test_loss:.4f}')
+print(f'Test Loss: {test_loss:.6f}')
 
 # Save model and metadata
 model_directory = Path(__file__).resolve().parent.parent / MODEL_DIRECTORY

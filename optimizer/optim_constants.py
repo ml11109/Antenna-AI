@@ -8,8 +8,8 @@ MODEL_NAME = 'john_5'
 DATA_NAME = 'data_1'
 
 PARAM_LIMITS = (
-    (0, 100000), # frequency
-    (0, 100000), # gap
+    (250, 800), # frequency
+    (0, 155), # gap
     (0, 100000), # gap_width
     (0, 100000), # gap_length
     (0, 100000), # finger_width
@@ -20,17 +20,20 @@ MODEL_DIRECTORY = Path('models')
 DATA_DIRECTORY = Path('data')
 SCALER_DIRECTORY = Path('scalers')
 
+PRINT_STATUS = True
+PRINT_INTERVAL = 100
+
 # Gradient optimization parameters
 NUM_EPOCHS = 10000
 LEARNING_RATE = 0.05
 
 # Early stopping parameters
 USE_EARLY_STOPPING = False
-STOPPER_PATIENCE = 30
+STOPPER_PATIENCE = 200
 STOPPER_MIN_DELTA = 0.0001
 
 # Learning rate scheduling parameters
 USE_SCHEDULER = True
-SCHEDULER_PATIENCE = 11
+SCHEDULER_PATIENCE = 5
 SCHEDULER_FACTOR = 0.5
 SCHEDULER_MIN_LR = 1e-8

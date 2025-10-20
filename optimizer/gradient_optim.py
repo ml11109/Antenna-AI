@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.optim import lr_scheduler
 
-from neural_network.early_stopping import EarlyStopping
+from neural_network.loss_tracker import LossTracker
 from optimizer.optim_constants import *
 from neural_network.model_loader import load_neural_network
 
@@ -14,27 +14,23 @@ from neural_network.model_loader import load_neural_network
 model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)
 input_dim = metadata['dimensions']['input']
 
-# Initialize design parameters
+# Initialize design and training parameters
 params_scaled = torch.tensor(np.zeros(input_dim).reshape(1, -1), dtype=torch.float32, requires_grad=True)
 optimizer = torch.optim.Adam([params_scaled], lr=LEARNING_RATE)
 
-early_stopping = None
-if USE_EARLY_STOPPING:
-    early_stopping = EarlyStopping(
-        patience=STOPPER_PATIENCE,
-        min_delta=STOPPER_MIN_DELTA,
-        restore_best_weights=True
-    )
+loss_tracker = LossTracker(
+    early_stop=USE_EARLY_STOPPING,
+    patience=STOPPER_PATIENCE,
+    min_delta=STOPPER_MIN_DELTA
+)
 
-scheduler = None
-if USE_SCHEDULER:
-    scheduler = lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=SCHEDULER_FACTOR,
-        patience=SCHEDULER_PATIENCE,
-        min_lr=SCHEDULER_MIN_LR
-    )
+scheduler = lr_scheduler.ReduceLROnPlateau(
+    optimizer,
+    mode='min',
+    factor=SCHEDULER_FACTOR,
+    patience=SCHEDULER_PATIENCE,
+    min_lr=SCHEDULER_MIN_LR
+)
 
 # Get scaler parameters
 mean_y = torch.tensor(data_handler.scaler_y.mean_, dtype=torch.float32)
@@ -55,33 +51,36 @@ def limit_params(params_scaled):
     params_scaled = torch.clamp(params_scaled, min=min_scaled, max=max_scaled)
     return params_scaled
 
+with torch.no_grad():
+    params_scaled[:] = limit_params(params_scaled)
+
 # Training loop
 for epoch in range(NUM_EPOCHS):
     optimizer.zero_grad()
     loss = get_loss(params_scaled)
+
+    if loss_tracker(loss.item(), params_scaled):
+        print(f'Early stopping at epoch {epoch}')
+        break
+
     loss.backward()
     optimizer.step()
 
     with torch.no_grad():
         params_scaled[:] = limit_params(params_scaled)
 
-    if early_stopping and early_stopping(loss, model):
-        print(f'Early stopping at epoch {epoch}')
-        break
+    if USE_SCHEDULER:
+        scheduler.step(loss.item())
 
-    if scheduler:
-        scheduler.step(loss)
-
-    if epoch % 100 == 0:
-        outputs = data_handler.inverse_scale_y(model(params_scaled).detach().numpy())
+    if PRINT_STATUS and epoch % PRINT_INTERVAL == 0:
         params_unscaled = data_handler.inverse_scale_x(params_scaled.detach().numpy())
-        print(f'Epoch: {epoch}, '
-              f'Parameters: {[round(param.item(), 4) for param in params_unscaled.flatten()]}, '
-              f'Output: {loss.item(): .4f}, '
-              f'LR: {optimizer.param_groups[0]["lr"]:.6f}')
+        params = [round(param.item(), 4) for param in params_unscaled.flatten()]
+        lr = optimizer.param_groups[0]['lr']
+        print(f'Epoch: {epoch}, Parameters: {params}, Output: {loss.item(): .4f}, LR: {lr:.6f}')
 
 # Compute final output
-outputs = data_handler.inverse_scale_y(model(params_scaled).detach().numpy())
+params_scaled = loss_tracker.load_best()
 params_unscaled = data_handler.inverse_scale_x(params_scaled.detach().numpy())
-print('Parameters:', [round(param.item(), 4) for param in params_unscaled.flatten()])
-print('Output:', f'{get_loss(params_scaled).item(): .4f}')
+params = [round(param.item(), 4) for param in params_unscaled.flatten()]
+loss = get_loss(params_scaled)
+print(f'\nParameters: {params}\nOutput: {loss.item(): .6f}')

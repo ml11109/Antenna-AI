@@ -11,6 +11,9 @@ MODEL_DIRECTORY = Path('models')
 DATA_DIRECTORY = Path('data')
 SCALER_DIRECTORY = Path('scalers')
 
+PRINT_STATUS = True
+PRINT_INTERVAL = 10
+
 # Training parameters
 NUM_EPOCHS = 500
 BATCH_SIZE = 32
