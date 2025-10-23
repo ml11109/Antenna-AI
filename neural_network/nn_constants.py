@@ -2,26 +2,30 @@
 Constants for neural network training and testing
 """
 
-from pathlib import Path
+OUTPUT = 's_max'
 
-MODEL_NAME = 'john_5'
-DATA_NAME = 'data_1'
+MODEL_NAME = f'{OUTPUT}_model'
+DATA_NAME = f'{OUTPUT}_data'
 
-MODEL_DIRECTORY = Path('models')
-DATA_DIRECTORY = Path('data')
-SCALER_DIRECTORY = Path('scalers')
+MODEL_DIRECTORY = 'models'
+DATA_DIRECTORY = 'data/cleaned_data'
+SCALER_DIRECTORY = 'scalers'
 
 PRINT_STATUS = True
 PRINT_INTERVAL = 10
+
+SWEEP_FREQUENCY = OUTPUT == 's'
+NUM_PARAMS = 6 if SWEEP_FREQUENCY else 5
+FREQUENCY_INDEX = 0
 
 # Training parameters
 NUM_EPOCHS = 500
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 TEST_SIZE = 0.2
-INPUT_DIM = 6
+INPUT_PARAMS = range(NUM_PARAMS)
+OUTPUT_PARAMS = [NUM_PARAMS]
 HIDDEN_DIM = [128, 128, 128]
-OUTPUT_DIM = 1
 
 # Early stopping parameters
 USE_EARLY_STOPPING = False
@@ -30,7 +34,7 @@ STOPPER_MIN_DELTA = 0.0001
 
 # Learning rate scheduling parameters
 USE_SCHEDULER = True
-SCHEDULER_PATIENCE = 10
+SCHEDULER_PATIENCE = 20
 SCHEDULER_FACTOR = 0.5
 SCHEDULER_MIN_LR = 1e-8
 

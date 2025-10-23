@@ -2,40 +2,39 @@
 Trains a neural network to predict antenna simulation outputs based on input parameters
 """
 
-import json
-import os
-
 import torch
 from sklearn.model_selection import train_test_split
 from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 
-from neural_network.nn_constants import *
-from neural_network.data_handler import AntennaDataHandler
-from neural_network.model import AntennaPredictorModel
+from neural_network.data_handler import DataHandler
 from neural_network.loss_tracker import LossTracker
+from neural_network.model import PredictorModel
+from neural_network.nn_constants import *
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load and preprocess data
-data_handler = AntennaDataHandler(DATA_NAME)
-X_data, y_data = data_handler.load_data(INPUT_DIM, OUTPUT_DIM)
+data_handler = DataHandler()
+X_data, y_data = data_handler.load_data()
 X_temp, X_test, y_temp, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=0)
-train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
-val_dataset = TensorDataset(torch.tensor(X_val, dtype=torch.float32), torch.tensor(y_val, dtype=torch.float32))
-test_dataset = TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.float32))
-train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+train_dataset, val_dataset, test_dataset = [
+    TensorDataset(torch.tensor(data[0], dtype=torch.float32), torch.tensor(data[1], dtype=torch.float32))
+    for data in [(X_train, y_train), (X_val, y_val), (X_test, y_test)]
+]
+train_loader, val_loader, test_loader = [
+    DataLoader(dataset=dataset, batch_size=BATCH_SIZE, shuffle=(dataset == train_dataset))
+    for dataset in [train_dataset, val_dataset, test_dataset]
+]
 
 # Model definition
-model = AntennaPredictorModel(
-    input_dim=INPUT_DIM,
+model = PredictorModel(
+    input_dim=len(INPUT_PARAMS),
     hidden_dim=HIDDEN_DIM,
-    output_dim=OUTPUT_DIM,
+    output_dim=len(OUTPUT_PARAMS),
     dropout_rate=DROPOUT_RATE,
     use_dropout=USE_DROPOUT
 ).to(device)
@@ -72,7 +71,7 @@ def train_epoch(loader):
 
     return train_loss_sum / len(loader)
 
-def get_loss(loader):
+def get_test_loss(loader):
     with torch.no_grad():
         loss_sum = 0.0
 
@@ -93,7 +92,7 @@ for epoch in range(NUM_EPOCHS):
     train_loss = train_epoch(train_loader)
 
     model.eval()
-    val_loss = get_loss(val_loader)
+    val_loss = get_test_loss(val_loader)
 
     if loss_tracker(val_loss, model):
         if PRINT_STATUS:
@@ -110,21 +109,16 @@ for epoch in range(NUM_EPOCHS):
 # Compute test loss
 model.load_state_dict(loss_tracker.load_best())
 model.eval()
-test_loss = get_loss(test_loader)
+test_loss = get_test_loss(test_loader)
 print(f'Test Loss: {test_loss:.6f}')
 
 # Save model and metadata
-model_directory = Path(__file__).resolve().parent.parent / MODEL_DIRECTORY
-model_path = model_directory / (MODEL_NAME + '.pth')
-metadata_path = model_directory / (MODEL_NAME + '_metadata.json')
-
-os.makedirs(model_directory, exist_ok=True)
-torch.save(model.state_dict(), model_path)
-data_handler.save_scalers()
-
 metadata = {
+    'output_param': OUTPUT,
     'model_name': MODEL_NAME,
     'data_name': DATA_NAME,
+    'sweep_freq': SWEEP_FREQUENCY,
+    'freq_index': FREQUENCY_INDEX,
     'results': {
         'test_loss': test_loss
     },
@@ -134,9 +128,9 @@ metadata = {
         'learning_rate': LEARNING_RATE
     },
     'dimensions': {
-        'input': INPUT_DIM,
+        'input': len(INPUT_PARAMS),
         'hidden': HIDDEN_DIM,
-        'output': OUTPUT_DIM
+        'output': len(OUTPUT_PARAMS)
     },
     'early_stopping': {
         'use_early_stopping': USE_EARLY_STOPPING,
@@ -156,5 +150,5 @@ metadata = {
     }
 }
 
-with open(metadata_path, 'w') as f:
-    json.dump(metadata, f, indent=4)
+model.save(metadata)
+data_handler.save_scalers()

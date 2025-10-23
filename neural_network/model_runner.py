@@ -5,10 +5,9 @@ Runs the trained neural network
 import numpy as np
 import torch
 
-from neural_network.nn_constants import *
-from neural_network.model_loader import load_neural_network
+from neural_network.nn_loader import load_neural_network
 
-model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)
+model, metadata, data_handler = load_neural_network()
 input_dim = metadata['dimensions']['input']
 
 while True:
@@ -23,8 +22,8 @@ while True:
         if inputs.shape[1] != input_dim:
             raise ValueError
 
-        inputs = data_handler.scale_x(inputs).to(torch.float32)
-        outputs = data_handler.inverse_scale_y(model(inputs))
+        inputs = data_handler.scale(inputs, 'params').to(torch.float32)
+        outputs = data_handler.scale(model(inputs), 'outputs', inverse=True)
         print(f'Outputs: {outputs.item():.6f}')
 
     except ValueError:
