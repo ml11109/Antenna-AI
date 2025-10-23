@@ -25,7 +25,7 @@ while True:
 
         inputs = data_handler.scale_x(inputs).to(torch.float32)
         outputs = data_handler.inverse_scale_y(model(inputs))
-        print(f'Outputs: {outputs[0]}')
+        print(f'Outputs: {outputs.item():.6f}')
 
     except ValueError:
         print('Invalid input. Please try again.')

@@ -53,30 +53,6 @@ class AntennaDataHandler:
             data = data.detach().numpy()
         return torch.from_numpy(op(data))
 
-    # def scale_x(self, x):
-    #     return self.scaling_operation(x, self.scaler_x.transform)
-    #
-    # def scale_y(self, y):
-    #     if isinstance(y, Tensor):
-    #         y = y.detach().numpy()
-    #         return Tensor(self.scaler_y.transform(y))
-    #
-    #     return self.scaler_y.transform(y)
-    #
-    # def inverse_scale_x(self, x):
-    #     if isinstance(x, Tensor):
-    #         x = x.detach().numpy()
-    #         return Tensor(self.scaler_x.inverse_transform(x))
-    #
-    #     return self.scaler_x.inverse_transform(x)
-    #
-    # def inverse_scale_y(self, y):
-    #     if isinstance(y, Tensor):
-    #         y = y.detach().numpy()
-    #         return Tensor(self.scaler_y.inverse_transform(y))
-    #
-    #     return self.scaler_y.inverse_transform(y)
-
     def save_scalers(self):
         os.makedirs(self.scaler_directory, exist_ok=True)
         joblib.dump(self.scaler_x, self.scaler_x_path)
