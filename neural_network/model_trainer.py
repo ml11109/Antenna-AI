@@ -96,8 +96,7 @@ for epoch in range(NUM_EPOCHS):
     val_loss = get_loss(val_loader)
 
     if loss_tracker(val_loss, model):
-        if PRINT_STATUS:
-            print(f'Early stopping at epoch {epoch}')
+        print(f'Early stopping at epoch {epoch}')
         break
 
     if scheduler:
