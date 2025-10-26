@@ -1,0 +1,40 @@
+{
+    "output_param": "s",
+    "model_name": "s_model",
+    "data_name": "s_data",
+    "sweep_freq": true,
+    "freq_index": 0,
+    "results": {
+        "test_loss": 0.09326516548472066
+    },
+    "training_parameters": {
+        "num_epochs": 300,
+        "batch_size": 32,
+        "learning_rate": 0.001
+    },
+    "dimensions": {
+        "input": 6,
+        "hidden": [
+            128,
+            128,
+            128
+        ],
+        "output": 1
+    },
+    "early_stopping": {
+        "use_early_stopping": false,
+        "patience": 30,
+        "min_delta": 0.0001,
+        "final_epoch": 299
+    },
+    "learning_rate_scheduler": {
+        "use_scheduler": true,
+        "patience": 10,
+        "factor": 0.5,
+        "min_lr": 1e-08
+    },
+    "dropout": {
+        "use_dropout": true,
+        "dropout_rate": 0.1
+    }
+}

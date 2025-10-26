@@ -1,0 +1,40 @@
+{
+    "output_param": "s_max",
+    "model_name": "s_max_model",
+    "data_name": "s_max_data",
+    "sweep_freq": false,
+    "freq_index": 0,
+    "results": {
+        "test_loss": 0.3334266133606434
+    },
+    "training_parameters": {
+        "num_epochs": 1000,
+        "batch_size": 32,
+        "learning_rate": 0.001
+    },
+    "dimensions": {
+        "input": 5,
+        "hidden": [
+            128,
+            128,
+            128
+        ],
+        "output": 1
+    },
+    "early_stopping": {
+        "use_early_stopping": false,
+        "patience": 30,
+        "min_delta": 0.0001,
+        "final_epoch": 999
+    },
+    "learning_rate_scheduler": {
+        "use_scheduler": true,
+        "patience": 20,
+        "factor": 0.5,
+        "min_lr": 1e-08
+    },
+    "dropout": {
+        "use_dropout": true,
+        "dropout_rate": 0.1
+    }
+}

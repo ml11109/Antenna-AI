@@ -1,0 +1,40 @@
+{
+    "output_param": "s_avg",
+    "model_name": "s_avg_model",
+    "data_name": "s_avg_data",
+    "sweep_freq": false,
+    "freq_index": 0,
+    "results": {
+        "test_loss": 0.15877133049070835
+    },
+    "training_parameters": {
+        "num_epochs": 1000,
+        "batch_size": 32,
+        "learning_rate": 0.001
+    },
+    "dimensions": {
+        "input": 5,
+        "hidden": [
+            128,
+            128,
+            128
+        ],
+        "output": 1
+    },
+    "early_stopping": {
+        "use_early_stopping": true,
+        "patience": 200,
+        "min_delta": 0.0001,
+        "final_epoch": 246
+    },
+    "learning_rate_scheduler": {
+        "use_scheduler": true,
+        "patience": 20,
+        "factor": 0.5,
+        "min_lr": 1e-08
+    },
+    "dropout": {
+        "use_dropout": true,
+        "dropout_rate": 0.1
+    }
+}
