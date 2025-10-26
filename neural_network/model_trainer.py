@@ -99,7 +99,7 @@ for epoch in range(NUM_EPOCHS):
             print(f'Early stopping at epoch {epoch}')
         break
 
-    if scheduler:
+    if USE_SCHEDULER:
         scheduler.step(val_loss)
 
     if PRINT_STATUS and epoch % PRINT_INTERVAL == 0:

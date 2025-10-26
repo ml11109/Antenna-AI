@@ -2,13 +2,13 @@
 Constants for optimizer
 """
 
-OUTPUT = 's_max'
+OUTPUT = 's_avg'
 
 MODEL_NAME = f'{OUTPUT}_model'
 MODEL_DIRECTORY = 'models'
 
 PRINT_STATUS = True
-PRINT_INTERVAL = 100
+PRINT_INTERVAL = 1
 
 # Antenna parameters
 SIZE = 155
@@ -30,7 +30,7 @@ RELATIVE_CONSTRAINTS = [
 ]
 
 # Gradient optimization parameters
-NUM_EPOCHS = 3000
+NUM_EPOCHS = 100
 LEARNING_RATE = 0.01
 
 # Early stopping parameters

@@ -8,15 +8,14 @@ from gradient_optimization.optim_constants import *
 
 
 class GradientOptimizer:
-    def __init__(self, model, data_handler, params_scaled, device=None):
+    def __init__(self, model, data_handler, device=None):
         self.model = model
         self.data_handler = data_handler
-        self.params_scaled = params_scaled
         self.device = device
 
-    def get_loss(self):
+    def get_loss(self, params_scaled):
         # Loss = mean output
-        outputs_scaled = self.model(self.params_scaled)
+        outputs_scaled = self.model(params_scaled)
         outputs = self.data_handler.diff_scale(outputs_scaled, 'outputs', inverse=True)
         mean_output = torch.mean(outputs)
         return mean_output
@@ -26,12 +25,8 @@ class GradientOptimizer:
         limits_scaled = self.data_handler.scale(limits.reshape(2, -1), 'params')
         return limits_scaled
 
-    def limit_params(self, limits_dict=PARAM_LIMITS, relative_constraints=RELATIVE_CONSTRAINTS):
-        params_cloned = self.params_scaled.clone().detach()
-
-        # Enforce absolute limits
-        limits_scaled = self.get_param_limits(limits_dict)
-        params_cloned = torch.clamp(params_cloned, min=limits_scaled[0, :], max=limits_scaled[1, :])
+    def limit_params(self, params_scaled, limits_dict=PARAM_LIMITS, relative_constraints=RELATIVE_CONSTRAINTS):
+        params_cloned = params_scaled.clone().detach()
 
         # Enforce relative constraints
         eps = 1e-12
@@ -62,23 +57,29 @@ class GradientOptimizer:
             params_cloned[0, index1] = new_p1_scaled
             params_cloned[0, index2] = new_p2_scaled
 
-        self.params_scaled[:] = params_cloned
+        # Enforce absolute limits
+        limits_scaled = self.get_param_limits(limits_dict)
+        params_cloned = torch.clamp(params_cloned, min=limits_scaled[0, :], max=limits_scaled[1, :])
 
-    def print_status(self, epoch, loss, lr):
-        params = self.data_handler.diff_scale(self.params_scaled, 'params', inverse=True)
+        return params_cloned
+
+    def print_status(self, params_scaled, epoch, loss, lr):
+        params_cloned = params_scaled.clone().detach()
+        params = self.data_handler.diff_scale(params_cloned, 'params', inverse=True)
         params_list = [round(param.item(), 4) for param in params.flatten()]
         print(f'Epoch: {epoch}, Parameters: {params_list}, Loss: {loss.item(): .4f}, LR: {lr:.6f}')
 
-    def print_final_output(self):
-        params = self.data_handler.diff_scale(self.params_scaled, 'params', inverse=True)
+    def print_final_output(self, params_scaled):
+        params_cloned = params_scaled.clone().detach()
+        params = self.data_handler.diff_scale(params_cloned, 'params', inverse=True)
         params_list = [round(param.item(), 4) for param in params.flatten()]
-        loss = self.get_loss()
+        loss = self.get_loss(params_scaled)
         print(f'\nParameters: {params_list}\nLoss: {loss.item():.6f}')
 
 
 class FrequencySweepOptimizer(GradientOptimizer):
-    def __init__(self, model, data_handler, params_scaled, freq_index, device=None):
-        super().__init__(model, data_handler, params_scaled, device)
+    def __init__(self, model, data_handler, freq_index, device=None):
+        super().__init__(model, data_handler, device)
         self.freq_index = freq_index
 
     def insert_freq(self, params, freq_col):
@@ -87,7 +88,7 @@ class FrequencySweepOptimizer(GradientOptimizer):
         params_with_freq = torch.cat([left, freq_col.reshape(-1, 1), right], dim=1)
         return params_with_freq
 
-    def get_loss(self, freq_range=FREQUENCY_RANGE, sweep_res=FREQUENCY_SWEEP_RES, tau=1e-2):
+    def get_loss(self, params_scaled, freq_range=FREQUENCY_RANGE, sweep_res=FREQUENCY_SWEEP_RES, tau=1e-2):
         # Loss = smooth maximum output across frequency sweep
         # tau: temperature parameter for smooth max
 
@@ -97,7 +98,7 @@ class FrequencySweepOptimizer(GradientOptimizer):
 
         # Replicate params for each frequency and insert freq column
         freq_col = freqs_scaled.view(sweep_res, 1)
-        params_rep = self.params_scaled.repeat(sweep_res, 1)
+        params_rep = params_scaled.repeat(sweep_res, 1)
         params_with_freq = self.insert_freq(params_rep, freq_col)
 
         # Model outputs for each frequency
@@ -112,6 +113,6 @@ class FrequencySweepOptimizer(GradientOptimizer):
 
     def get_param_limits(self, limits_dict=PARAM_LIMITS):
         limits = self.insert_freq(torch.tensor(limits_dict).t(), torch.tensor([0, 0]))
-        params_mask = [i != self.freq_index for i in range(self.params_scaled.size()[1] + 1)]
+        params_mask = [i != self.freq_index for i in range(len(limits_dict) + 1)]
         limits_scaled = self.data_handler.scale(limits.reshape(2, -1), 'params')[:, params_mask]
         return limits_scaled

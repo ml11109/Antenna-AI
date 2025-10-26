@@ -27,7 +27,6 @@ grad_optim = (
     FrequencySweepOptimizer(
         model=model,
         data_handler=data_handler,
-        params_scaled=params_scaled,
         freq_index=metadata['freq_index'],
         device=device
     )
@@ -35,7 +34,6 @@ grad_optim = (
     GradientOptimizer(
         model=model,
         data_handler=data_handler,
-        params_scaled=params_scaled,
         device=device
     )
 )
@@ -54,32 +52,34 @@ scheduler = lr_scheduler.ReduceLROnPlateau(
     min_lr=SCHEDULER_MIN_LR
 )
 
-with torch.no_grad():
-    grad_optim.limit_params()
+params_scaled = grad_optim.limit_params(params_scaled)
 
 # Training loop
 for epoch in range(NUM_EPOCHS):
     optimizer.zero_grad()
-    loss = grad_optim.get_loss()
-
-    if loss_tracker(loss.item(), params_scaled):
-        if PRINT_STATUS:
-            print(f'Early stopping at epoch {epoch}')
-        break
+    loss = grad_optim.get_loss(params_scaled)
 
     loss.backward()
     optimizer.step()
 
     with torch.no_grad():
-        grad_optim.limit_params()
+        params_scaled = grad_optim.limit_params(params_scaled)
+
+        print(loss.item(), params_scaled)
+        print()
+
+        if loss_tracker(loss.item(), params_scaled):
+            if PRINT_STATUS:
+                print(f'Early stopping at epoch {epoch}')
+            break
 
         if USE_SCHEDULER:
             scheduler.step(loss.item())
 
         if PRINT_STATUS and epoch % PRINT_INTERVAL == 0:
             lr = optimizer.param_groups[0]['lr']
-            grad_optim.print_status(epoch, loss, lr)
+            grad_optim.print_status(params_scaled, epoch, loss, lr)
 
 # Compute final output
 grad_optim.params_scaled = loss_tracker.load_best()
-grad_optim.print_final_output()
+grad_optim.print_final_output(params_scaled)
