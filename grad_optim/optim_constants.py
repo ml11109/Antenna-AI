@@ -2,7 +2,7 @@
 Constants for optimizer
 """
 
-OUTPUT = 's_max'
+OUTPUT = 's'
 
 MODEL_NAME = f'{OUTPUT}_model'
 MODEL_DIRECTORY = 'models'

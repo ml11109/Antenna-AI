@@ -2,6 +2,9 @@
 Plot a graph of s against frequency for a given set of parameters
 """
 
+import json
+from pathlib import Path
+
 import pandas as pd
 import seaborn as sns
 import torch
@@ -11,7 +14,7 @@ from graph.graph_constants import *
 from neural_network.nn_loader import load_neural_network
 
 
-def get_freq_col(freq_range=FREQUENCY_RANGE, sweep_res=GRAPH_RESOLUTION):
+def get_freq_col(freq_range=GRAPH_RANGE, sweep_res=GRAPH_RESOLUTION):
     freqs = torch.linspace(freq_range[0], freq_range[1], sweep_res)
     freqs_scaled = data_handler.diff_scale(freqs, 'freq')
     return freqs, freqs_scaled
@@ -32,17 +35,35 @@ def get_random(num_params):
     print(f'Generated random parameters: {[round(param, 4) for param in params.tolist()]}')
     return params
 
-def plot_outputs(df):
+def plot_outputs(df, used_freq_range=USED_FREQUENCY_RANGE, save=False, filename=None, image_directory=IMAGE_DIRECTORY, metadata=None):
     plt.figure(figsize=(10, 6))
     sns.lineplot(
         x=df['Frequency'],
         y=df['Model Output'],
         hue=df['Design No']
     )
+
     plt.title('Model Output vs Frequency', fontsize=16, pad=15)
     plt.xlabel('Frequency', fontsize=12, labelpad=10)
     plt.ylabel('Model Output', fontsize=12, labelpad=10)
-    plt.show()
+
+    # Add vertical dotted lines for min and max used frequencies
+    for f in used_freq_range:
+        plt.axvline(x=f, color='gray', linestyle=':', linewidth=1.0, alpha=0.8)
+
+    if save and filename is not None:
+        path = Path(image_directory) / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(path, dpi=300, bbox_inches='tight')
+
+        metadata_path = path.with_name(f"{path.stem}_metadata.json")
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=4)
+
+        plt.close()
+
+    else:
+        plt.show()
 
 
 model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)
@@ -51,36 +72,51 @@ freq_index = metadata['freq_index']
 
 freqs, freqs_scaled = get_freq_col()
 df = pd.DataFrame(columns=['Frequency', 'Model Output', 'Design No'])
+designs = {}
 design_no = 1
 
 while True:
     try:
-        inputs = input(f'Enter input data (comma-separated, {num_params} values): ')
+        inputs = input(f'Enter input data / random / plot / save / reset / quit: ')
 
         match inputs:
-            case 'quit':
-                break
+            case 'random':
+                params = get_random(num_params)
+
+            case 'plot':
+                plot_outputs(df)
+                continue
+
+            case 'save':
+                filename = input('Enter file name: ')
+                if filename == 'cancel':
+                    continue
+
+                graph_metadata = {
+                    'model_name': MODEL_NAME,
+                    'graph_resolution': GRAPH_RESOLUTION,
+                    'graph_range': GRAPH_RANGE,
+                    'used_frequency_range': USED_FREQUENCY_RANGE,
+                    'designs': designs
+                }
+
+                plot_outputs(df, save=True, filename=filename, metadata=graph_metadata)
+                continue
 
             case 'reset':
                 df = pd.DataFrame(columns=['Frequency', 'Model Output', 'Design No'])
                 design_no = 1
                 continue
 
-            case 'plot':
-                plot_outputs(df)
-                continue
-
-            case 'random':
-                inputs = get_random(num_params)
+            case 'quit':
+                break
 
             case _:
-                inputs = torch.tensor([float(x) for x in inputs.split(',')])
-                if len(inputs) != num_params:
+                params = torch.tensor([float(x) for x in inputs.split(',')])
+                if len(params) != num_params:
                     raise ValueError
 
-        output_col = get_output_col(inputs, freqs_scaled, freq_index)
-        design_no += 1
-
+        output_col = get_output_col(params, freqs_scaled, freq_index)
         df_temp = pd.DataFrame({
             'Frequency': freqs.numpy(),
             'Model Output': output_col.numpy(),
@@ -91,6 +127,9 @@ while True:
             df = df_temp
         else:
             df = pd.concat([df, df_temp], ignore_index=True)
+
+        designs[f'Design {design_no}'] = params.tolist()
+        design_no += 1
 
     except ValueError:
         print('Invalid input. Please try again.')
