@@ -115,4 +115,3 @@ class FrequencySweepOptimizer(GradientOptimizer):
         params_mask = [i != self.freq_index for i in range(self.params_scaled.size()[1] + 1)]
         limits_scaled = self.data_handler.scale(limits.reshape(2, -1), 'params')[:, params_mask]
         return limits_scaled
-
