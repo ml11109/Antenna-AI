@@ -2,7 +2,7 @@ from scipy.optimize import minimize
 import numpy as np
 import torch
 
-from gradient_optimization.optim_constants import *
+from grad_optim.optim_constants import *
 from neural_network.nn_loader import load_neural_network
 
 # Load neural network and scaler parameters

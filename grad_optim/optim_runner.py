@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from torch.optim import lr_scheduler
 
-from gradient_optimization.gradient_optimizer import GradientOptimizer, FrequencySweepOptimizer
-from gradient_optimization.optim_constants import *
+from grad_optim.gradient_optimizer import GradientOptimizer, FrequencySweepOptimizer
+from grad_optim.optim_constants import *
 from neural_network.loss_tracker import LossTracker
 from neural_network.nn_loader import load_neural_network
 
@@ -52,26 +52,24 @@ scheduler = lr_scheduler.ReduceLROnPlateau(
     min_lr=SCHEDULER_MIN_LR
 )
 
-params_scaled = grad_optim.limit_params(params_scaled)
+with torch.no_grad():
+    params_scaled[:] = grad_optim.limit_params(params_scaled)
 
 # Training loop
 for epoch in range(NUM_EPOCHS):
     optimizer.zero_grad()
     loss = grad_optim.get_loss(params_scaled)
 
+    if loss_tracker(loss.item(), params_scaled):
+        if PRINT_STATUS:
+            print(f'Early stopping at epoch {epoch}')
+        break
+
     loss.backward()
     optimizer.step()
 
     with torch.no_grad():
-        params_scaled = grad_optim.limit_params(params_scaled)
-
-        print(loss.item(), params_scaled)
-        print()
-
-        if loss_tracker(loss.item(), params_scaled):
-            if PRINT_STATUS:
-                print(f'Early stopping at epoch {epoch}')
-            break
+        params_scaled[:] = grad_optim.limit_params(params_scaled)
 
         if USE_SCHEDULER:
             scheduler.step(loss.item())
@@ -81,5 +79,5 @@ for epoch in range(NUM_EPOCHS):
             grad_optim.print_status(params_scaled, epoch, loss, lr)
 
 # Compute final output
-grad_optim.params_scaled = loss_tracker.load_best()
-grad_optim.print_final_output(params_scaled)
+best_params_scaled = loss_tracker.load_best()
+grad_optim.print_final_output(best_params_scaled)

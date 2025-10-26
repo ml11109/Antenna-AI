@@ -11,35 +11,31 @@ from neural_network.data_handler import DataHandler
 from neural_network.model import PredictorModel
 from neural_network.nn_constants import *
 
+def load_model(model_name=MODEL_NAME, model_directory=MODEL_DIRECTORY):
+    model_directory = Path(model_directory)
 
-class NeuralNetworkLoader:
-    def __init__(self, model_name=MODEL_NAME, model_directory=MODEL_DIRECTORY):
-        self.model_name = model_name
-        self.model_directory = Path(model_directory)
-        self.model_path = self.model_directory / (self.model_name + '.pth')
-        self.metadata_path = self.model_directory / (self.model_name + '_metadata.json')
+    metadata_path = model_directory / (model_name + '_metadata.json')
+    with open(metadata_path, 'r') as f:
+        metadata = json.load(f)
 
-        self.metadata = None
-        with open(self.metadata_path, 'r') as f:
-            self.metadata = json.load(f)
+    model_path = model_directory / (model_name + '.pth')
+    input_dim, hidden_dim, output_dim = metadata['dimensions'].values()
+    model = PredictorModel(input_dim, hidden_dim, output_dim)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
 
-    def load_model(self):
-        input_dim, hidden_dim, output_dim = self.metadata['dimensions'].values()
-        model = PredictorModel(input_dim, hidden_dim, output_dim)
-        model.load_state_dict(torch.load(self.model_path))
-        model.eval()
-        return model
+    return model, metadata
 
-    def load_metadata(self):
-        return self.metadata
+def load_data_handler(data_name, data_directory=DATA_DIRECTORY, scaler_directory=SCALER_DIRECTORY, sweep_freq=False, freq_index=None):
+    data_handler = DataHandler(data_name, data_directory, scaler_directory, sweep_freq, freq_index)
+    return data_handler
 
-    def load_data_handler(self):
-        data_name = self.metadata['data_name']
-        sweep_freq = self.metadata['sweep_freq']
-        freq_index = self.metadata['freq_index']
-        data_handler = DataHandler(data_name, sweep_freq=sweep_freq, freq_index=freq_index)
-        return data_handler
+def load_neural_network(model_name=MODEL_NAME, model_directory=MODEL_DIRECTORY, data_directory=DATA_DIRECTORY, scaler_directory=SCALER_DIRECTORY):
+    model, metadata = load_model(model_name, model_directory)
 
-def load_neural_network(model_name=MODEL_NAME, model_directory=MODEL_DIRECTORY):
-    model_loader = NeuralNetworkLoader(model_name, model_directory)
-    return model_loader.load_model(), model_loader.load_metadata(), model_loader.load_data_handler()
+    data_name = metadata['data_name']
+    sweep_freq = metadata['sweep_freq']
+    freq_index = metadata['freq_index']
+    data_handler = load_data_handler(data_name, data_directory, scaler_directory, sweep_freq, freq_index)
+
+    return model, metadata, data_handler

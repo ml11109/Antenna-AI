@@ -2,7 +2,6 @@
 Runs the trained neural network
 """
 
-import numpy as np
 import torch
 
 from neural_network.nn_loader import load_neural_network
@@ -17,7 +16,7 @@ while True:
         if inputs == 'quit':
             break
 
-        inputs = np.array([float(x) for x in inputs.split(',')]).reshape(1, -1)
+        inputs = torch.tensor([float(x) for x in inputs.split(',')]).reshape(1, -1)
 
         if inputs.shape[1] != input_dim:
             raise ValueError

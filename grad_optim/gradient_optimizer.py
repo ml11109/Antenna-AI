@@ -4,7 +4,7 @@ Modules for handling optimizer parameters
 
 import torch
 
-from gradient_optimization.optim_constants import *
+from grad_optim.optim_constants import *
 
 
 class GradientOptimizer:
@@ -34,7 +34,7 @@ class GradientOptimizer:
             p1_scaled = params_cloned[0, index1]
             p2_scaled = params_cloned[0, index2]
             p1 = self.data_handler.diff_scale(p1_scaled, 'params', index=index1, inverse=True)
-            p2 = self.data_handler.diff_scale(p2_scaled, 'params', index=index1, inverse=True)
+            p2 = self.data_handler.diff_scale(p2_scaled, 'params', index=index2, inverse=True)
 
             # Get current ratio and clip to limits
             if p2.abs() < eps:
@@ -59,22 +59,24 @@ class GradientOptimizer:
 
         # Enforce absolute limits
         limits_scaled = self.get_param_limits(limits_dict)
-        params_cloned = torch.clamp(params_cloned, min=limits_scaled[0, :], max=limits_scaled[1, :])
+        params_cloned = params_cloned.clamp(min=limits_scaled[0, :], max=limits_scaled[1, :])
 
         return params_cloned
 
-    def print_status(self, params_scaled, epoch, loss, lr):
+    def get_status(self, params_scaled, loss, set_infinity=False):
         params_cloned = params_scaled.clone().detach()
         params = self.data_handler.diff_scale(params_cloned, 'params', inverse=True)
-        params_list = [round(param.item(), 4) for param in params.flatten()]
-        print(f'Epoch: {epoch}, Parameters: {params_list}, Loss: {loss.item(): .4f}, LR: {lr:.6f}')
+        params_list = [round(param, 4) if param < INFINITY_THRESH or not set_infinity else 'infinity' for param in params.flatten().tolist()]
+        loss_str = f'{loss.item():.6f}' if loss.item() > -INFINITY_THRESH or not set_infinity else '-infinity'
+        return params_list, loss_str
+
+    def print_status(self, params_scaled, epoch, loss, lr):
+        params_list, loss_str = self.get_status(params_scaled, loss)
+        print(f'Epoch: {epoch}, Parameters: {params_list}, Loss: {loss_str}, LR: {lr:.6f}')
 
     def print_final_output(self, params_scaled):
-        params_cloned = params_scaled.clone().detach()
-        params = self.data_handler.diff_scale(params_cloned, 'params', inverse=True)
-        params_list = [round(param.item(), 4) for param in params.flatten()]
-        loss = self.get_loss(params_scaled)
-        print(f'\nParameters: {params_list}\nLoss: {loss.item():.6f}')
+        params_list, loss_str = self.get_status(params_scaled, self.get_loss(params_scaled), set_infinity=True)
+        print(f'\nParameters: {params_list}\nLoss: {loss_str}')
 
 
 class FrequencySweepOptimizer(GradientOptimizer):
@@ -97,9 +99,8 @@ class FrequencySweepOptimizer(GradientOptimizer):
         freqs_scaled = self.data_handler.diff_scale(freqs, 'freq')
 
         # Replicate params for each frequency and insert freq column
-        freq_col = freqs_scaled.view(sweep_res, 1)
         params_rep = params_scaled.repeat(sweep_res, 1)
-        params_with_freq = self.insert_freq(params_rep, freq_col)
+        params_with_freq = self.insert_freq(params_rep, freqs_scaled)
 
         # Model outputs for each frequency
         outputs = self.model(params_with_freq)

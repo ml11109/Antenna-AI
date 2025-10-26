@@ -58,11 +58,9 @@ class DataHandler:
         # Extract frequency from scaler params
         if self.sweep_freq:
             match data_type:
-                case 'freq':
-                    # Take only frequency
+                case 'freq': # take only frequency
                     extract_freq = lambda arr: arr[self.freq_index]
-                case 'x' | 'params':
-                    # Take all but frequency
+                case 'x' | 'params': # remove frequency
                     extract_freq = lambda arr: np.delete(arr, self.freq_index)
                 case _:
                     extract_freq = lambda arr: arr
