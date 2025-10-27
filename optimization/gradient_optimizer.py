@@ -4,7 +4,7 @@ Modules for handling optimizer parameters
 
 import torch
 
-from grad_optim.optim_constants import *
+from optimization.optim_constants import *
 
 
 class GradientOptimizer:
@@ -75,7 +75,8 @@ class GradientOptimizer:
         print(f'Epoch: {epoch}, Parameters: {params_list}, Loss: {loss_str}, LR: {lr:.6f}')
 
     def print_final_output(self, params_scaled):
-        params_list, loss_str = self.get_status(params_scaled, self.get_loss(params_scaled), set_infinity=True)
+        loss = self.get_loss(params_scaled)
+        params_list, loss_str = self.get_status(params_scaled, loss, set_infinity=True)
         print(f'\nParameters: {params_list}\nLoss: {loss_str}')
 
 
@@ -90,9 +91,8 @@ class FrequencySweepOptimizer(GradientOptimizer):
         params_with_freq = torch.cat([left, freq_col.reshape(-1, 1), right], dim=1)
         return params_with_freq
 
-    def get_loss(self, params_scaled, freq_range=FREQUENCY_RANGE, sweep_res=FREQUENCY_SWEEP_RES, tau=1e-2):
+    def get_loss(self, params_scaled, freq_range=FREQUENCY_RANGE, sweep_res=FREQUENCY_SWEEP_RES, tau=TAU):
         # Loss = smooth maximum output across frequency sweep
-        # tau: temperature parameter for smooth max
 
         # Get scaled frequency sweep points
         freqs = torch.linspace(freq_range[0], freq_range[1], sweep_res, device=self.device)

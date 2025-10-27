@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from torch.optim import lr_scheduler
 
-from grad_optim.gradient_optimizer import GradientOptimizer, FrequencySweepOptimizer
-from grad_optim.optim_constants import *
+from optimization.gradient_optimizer import GradientOptimizer, FrequencySweepOptimizer
+from optimization.optim_constants import *
 from neural_network.loss_tracker import LossTracker
 from neural_network.nn_loader import load_neural_network
 

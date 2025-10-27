@@ -1,0 +1,28 @@
+Comparing optimizer type:
+
+Design 1: Optimised for minimum max-output using predictor with frequency
+Parameters: [4.7592, 4.433, 3.8043, 14.2752, 48.8691]
+
+Design 2: Optimised for minimum max-output using predictor based on given max-output data
+Parameters: [1.6522, 0.0, 6.4019, 18.8895, 49.652]
+
+Design 3: Randomly generated
+Parameters: [3.5404, 8.7972, 0.2991, 12.1568, 50.6212]
+
+
+Comparing tau value:
+
+Design 1: tau = 1
+Parameters: [4.0412, 10.2213, 6.3641, 8.0435, 51.2006]
+
+Design 2: tau = 0.1
+Parameters: [4.6691, 6.4246, 4.3661, 12.923, 52.8935]
+
+Design 3: tau = 0.01
+Parameters: [4.759, 4.4336, 3.8018, 14.2743, 48.862]
+
+Design 4: tau = 0.001
+Parameters: [4.8306, 4.6896, 4.3341, 15.5515, 54.4788]
+
+Design 5: Randomly generated
+Parameters: [0.7158, 11.381, 5.1334, 16.93, 51.2095]

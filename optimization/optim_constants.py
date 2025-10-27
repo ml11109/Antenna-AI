@@ -1,13 +1,14 @@
 """
-Constants for optimizer
+Constants for optimization
 """
 
 OUTPUT = 's'
 MODEL_NAME = f'{OUTPUT}_model'
 
 # Gradient optimization parameters
-NUM_EPOCHS = 10000
-LEARNING_RATE = 0.001
+NUM_EPOCHS = 3000
+LEARNING_RATE = 0.01
+TAU = 1 # temperature parameter for smooth max
 PRINT_STATUS = True
 PRINT_INTERVAL = 100
 INFINITY_THRESH = 1000
@@ -38,6 +39,6 @@ STOPPER_MIN_DELTA = 0.0001
 
 # Learning rate scheduling parameters
 USE_SCHEDULER = True
-SCHEDULER_PATIENCE = 10
+SCHEDULER_PATIENCE = 100
 SCHEDULER_FACTOR = 0.5
 SCHEDULER_MIN_LR = 1e-8
