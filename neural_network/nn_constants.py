@@ -3,28 +3,29 @@ Constants for neural network training and testing
 """
 
 OUTPUT = 's'
-
 MODEL_NAME = f'{OUTPUT}_model'
 DATA_NAME = f'{OUTPUT}_data'
 
 MODEL_DIRECTORY = 'models'
 DATA_DIRECTORY = 'data/cleaned_data'
-SCALER_DIRECTORY = 'scalers'
-
-SWEEP_FREQUENCY = OUTPUT == 's'
-NUM_PARAMS = 6 if SWEEP_FREQUENCY else 5
-FREQUENCY_INDEX = 0
+SCALER_DIRECTORY = 'data/scalers'
 
 # Training parameters
 NUM_EPOCHS = 500
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 TEST_SIZE = 0.2
-INPUT_PARAMS = range(NUM_PARAMS)
-OUTPUT_PARAMS = [NUM_PARAMS]
-HIDDEN_DIM = [128, 128, 128]
 PRINT_STATUS = True
 PRINT_INTERVAL = 10
+
+# Neural network parameters
+SWEEP_FREQUENCY = OUTPUT == 's'
+FREQUENCY_INDEX = 0
+INPUT_DIM = 6 if SWEEP_FREQUENCY else 5
+OUTPUT_DIM = 1
+INPUT_INDICES = range(INPUT_DIM)
+OUTPUT_INDICES = range(INPUT_DIM, INPUT_DIM + OUTPUT_DIM)
+HIDDEN_DIM = [128, 128, 128]
 
 # Early stopping parameters
 USE_EARLY_STOPPING = False

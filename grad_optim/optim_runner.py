@@ -15,7 +15,7 @@ from neural_network.nn_loader import load_neural_network
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load neural network
-model, metadata, data_handler = load_neural_network(MODEL_NAME, MODEL_DIRECTORY)
+model, metadata, data_handler = load_neural_network(MODEL_NAME)
 
 # Initialise optimizer
 input_dim = metadata['dimensions']['input']

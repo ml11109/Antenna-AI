@@ -3,9 +3,7 @@ Constants for optimizer
 """
 
 OUTPUT = 's'
-
 MODEL_NAME = f'{OUTPUT}_model'
-MODEL_DIRECTORY = 'models'
 
 # Gradient optimization parameters
 NUM_EPOCHS = 10000

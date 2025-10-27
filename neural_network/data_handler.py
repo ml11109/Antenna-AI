@@ -84,10 +84,10 @@ class DataHandler:
         else:
             return (data - mean) / std
 
-    def load_data(self, input_params=INPUT_PARAMS, output_params=OUTPUT_PARAMS):
+    def load_data(self, input_indices=INPUT_INDICES, output_indices=OUTPUT_INDICES):
         df = pd.read_csv(self.data_path)
-        x = df.iloc[:, input_params].values
-        y = df.iloc[:, output_params].values
+        x = df.iloc[:, input_indices].values
+        y = df.iloc[:, output_indices].values
 
         if self.new_scalers:
             x = self.scaler_x.fit_transform(x)

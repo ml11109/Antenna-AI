@@ -32,9 +32,9 @@ train_loader, val_loader, test_loader = [
 
 # Model definition
 model = PredictorModel(
-    input_dim=len(INPUT_PARAMS),
+    input_dim=INPUT_DIM,
     hidden_dim=HIDDEN_DIM,
-    output_dim=len(OUTPUT_PARAMS),
+    output_dim=OUTPUT_DIM,
     dropout_rate=DROPOUT_RATE,
     use_dropout=USE_DROPOUT
 ).to(device)
@@ -128,9 +128,9 @@ metadata = {
         'learning_rate': LEARNING_RATE
     },
     'dimensions': {
-        'input': len(INPUT_PARAMS),
+        'input': INPUT_DIM,
         'hidden': HIDDEN_DIM,
-        'output': len(OUTPUT_PARAMS)
+        'output': OUTPUT_DIM
     },
     'early_stopping': {
         'use_early_stopping': USE_EARLY_STOPPING,
