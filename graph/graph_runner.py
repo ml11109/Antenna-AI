@@ -22,7 +22,7 @@ graph_handler = GraphHandler(
 
 while True:
     try:
-        inputs = input(f'Enter input data (or random / plot / save / reset / quit): ')
+        inputs = input(f'Enter input data (or random / plot / save / reset / quit): ').lower().strip()
 
         match inputs:
             case 'random':

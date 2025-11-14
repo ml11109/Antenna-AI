@@ -22,7 +22,7 @@ X_data, y_data = data_handler.load_data()
 X_temp, X_test, y_temp, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=0)
 train_dataset, val_dataset, test_dataset = [
-    TensorDataset(torch.tensor(data[0], dtype=torch.float32), torch.tensor(data[1], dtype=torch.float32))
+    TensorDataset(data[0], data[1])
     for data in [(X_train, y_train), (X_val, y_val), (X_test, y_test)]
 ]
 train_loader, val_loader, test_loader = [
@@ -57,7 +57,7 @@ scheduler = lr_scheduler.ReduceLROnPlateau(
 
 def train_epoch(loader):
     train_loss_sum = 0.0
-    for i, (x_batch, y_batch) in enumerate(loader):
+    for x_batch, y_batch in loader:
         x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
 

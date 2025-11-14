@@ -2,7 +2,7 @@
 Constants for neural network training and testing
 """
 
-OUTPUT = 's_max'
+OUTPUT = 's'
 MODEL_NAME = f'{OUTPUT}_model'
 DATA_NAME = f'{OUTPUT}_data'
 
@@ -11,7 +11,7 @@ DATA_DIRECTORY = 'data/cleaned_data'
 SCALER_DIRECTORY = 'data/scalers'
 
 # Training parameters
-NUM_EPOCHS = 10
+NUM_EPOCHS = 500
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 TEST_SIZE = 0.2

@@ -1,6 +1,7 @@
 """
 Defines the neural network model for antenna simulation output prediction
 """
+
 import json
 from pathlib import Path
 

@@ -98,6 +98,9 @@ class DataHandler:
             x = self.scaler_x.transform(x)
             y = self.scaler_y.transform(y)
 
+        x = torch.Tensor(x)
+        y = torch.Tensor(y)
+
         return x, y
 
     def save_scalers(self):
