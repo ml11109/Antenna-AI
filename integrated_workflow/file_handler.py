@@ -6,7 +6,7 @@ import joblib
 import json
 from pathlib import Path
 
-from integrated_workflow.workflow_constants import *
+from constants import *
 
 
 class FileHandler:

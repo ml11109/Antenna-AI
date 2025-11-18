@@ -22,7 +22,7 @@ def get_loss(inputs_scaled):
     loss = torch.mean(outputs_unscaled)
     return loss
 
-def scipy_optimize_with_constraints(params_scaled_init=None, maxiter=NUM_EPOCHS):
+def scipy_optimize_with_constraints(params_scaled_init=None, maxiter=OPTIM_EPOCHS):
     eps = 1e-12
     n = input_dim
 

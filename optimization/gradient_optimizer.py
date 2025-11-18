@@ -63,11 +63,11 @@ class GradientOptimizer:
 
         return params_cloned
 
-    def get_status(self, params_scaled, loss, set_infinity=False):
+    def get_status(self, params_scaled, loss):
         params_cloned = params_scaled.clone().detach()
         params = self.data_handler.diff_scale(params_cloned, 'params', inverse=True)
-        params_list = [round(param, 4) if param < INFINITY_THRESH or not set_infinity else 'infinity' for param in params.flatten().tolist()]
-        loss_str = f'{loss.item():.6f}' if loss.item() > -INFINITY_THRESH or not set_infinity else '-infinity'
+        params_list = [round(param, 4) for param in params.flatten().tolist()]
+        loss_str = f'{loss.item():.6f}'
         return params_list, loss_str
 
     def print_status(self, params_scaled, epoch, loss, lr):
@@ -76,7 +76,7 @@ class GradientOptimizer:
 
     def print_final_output(self, params_scaled):
         loss = self.get_loss(params_scaled)
-        params_list, loss_str = self.get_status(params_scaled, loss, set_infinity=True)
+        params_list, loss_str = self.get_status(params_scaled, loss)
         print(f'\nParameters: {params_list}\nLoss: {loss_str}')
 
 

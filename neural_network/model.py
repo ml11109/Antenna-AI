@@ -2,17 +2,13 @@
 Defines the neural network model for antenna simulation output prediction
 """
 
-import json
-from pathlib import Path
-
 import torch
+from pathlib import Path
 from torch import nn
-from neural_network.nn_constants import *
 
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_dim=INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM, dropout_rate=DROPOUT_RATE,
-                 use_dropout=USE_DROPOUT, name=MODEL_NAME, directory=MODEL_DIRECTORY):
+    def __init__(self, input_dim, hidden_dim, output_dim, dropout_rate, use_dropout, name, directory):
         super(NeuralNetwork, self).__init__()
 
         self.use_dropout = use_dropout
@@ -42,12 +38,7 @@ class NeuralNetwork(nn.Module):
     def forward(self, x):
         return self.layers(x)
 
-    def save(self, metadata):
+    def save(self):
         model_path = self.directory / (self.name + '.pth')
-        metadata_path = self.directory / (self.name + '_metadata.json')
-
         self.directory.mkdir(parents=True, exist_ok=True)
         torch.save(self.state_dict(), model_path)
-
-        with open(metadata_path, 'w') as f:
-            json.dump(metadata, f, indent=4)

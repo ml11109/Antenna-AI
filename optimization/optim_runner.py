@@ -11,73 +11,79 @@ from optimization.optim_constants import *
 from neural_network.loss_tracker import LossTracker
 from neural_network.nn_loader import load_neural_network
 
-# Device configuration
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def gradient_optimize():
+    # Device configuration
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Load neural network
-model, metadata, data_handler = load_neural_network(MODEL_NAME)
+    # Load neural network
+    model, metadata, data_handler = load_neural_network(MODEL_NAME)
 
-# Initialise optimizer
-input_dim = metadata['dimensions']['input']
-num_params = input_dim - (1 if metadata['sweep_freq'] else 0) # remove one parameter for freq
-params_scaled = torch.tensor(np.zeros(num_params).reshape(1, -1), dtype=torch.float32, requires_grad=True, device=device)
-optimizer = torch.optim.Adam([params_scaled], lr=LEARNING_RATE)
+    # Initialise optimizer
+    input_dim = metadata['dimensions']['input']
+    num_params = input_dim - (1 if metadata['sweep_freq'] else 0) # remove one parameter for freq
+    params_scaled = torch.tensor(np.zeros(num_params).reshape(1, -1), dtype=torch.float32, requires_grad=True, device=device)
+    optimizer = torch.optim.Adam([params_scaled], lr=OPTIM_LEARNING_RATE)
 
-grad_optim = (
-    FrequencySweepOptimizer(
-        model=model,
-        data_handler=data_handler,
-        freq_index=metadata['freq_index'],
-        device=device
+    grad_optim = (
+        FrequencySweepOptimizer(
+            model=model,
+            data_handler=data_handler,
+            freq_index=metadata['freq_index'],
+            device=device
+        )
+    ) if metadata['sweep_freq'] else (
+        GradientOptimizer(
+            model=model,
+            data_handler=data_handler,
+            device=device
+        )
     )
-) if metadata['sweep_freq'] else (
-    GradientOptimizer(
-        model=model,
-        data_handler=data_handler,
-        device=device
+
+    loss_tracker = LossTracker(
+        early_stop=OPTIM_EARLY_STOPPING['use'],
+        patience=OPTIM_EARLY_STOPPING['patience'],
+        min_delta=OPTIM_EARLY_STOPPING['min_delta']
     )
-)
 
-loss_tracker = LossTracker(
-    early_stop=USE_EARLY_STOPPING,
-    patience=STOPPER_PATIENCE,
-    min_delta=STOPPER_MIN_DELTA
-)
-
-scheduler = lr_scheduler.ReduceLROnPlateau(
-    optimizer,
-    mode='min',
-    factor=SCHEDULER_FACTOR,
-    patience=SCHEDULER_PATIENCE,
-    min_lr=SCHEDULER_MIN_LR
-)
-
-with torch.no_grad():
-    params_scaled[:] = grad_optim.limit_params(params_scaled)
-
-# Training loop
-for epoch in range(NUM_EPOCHS):
-    optimizer.zero_grad()
-    loss = grad_optim.get_loss(params_scaled)
-
-    if loss_tracker(loss.item(), params_scaled):
-        if PRINT_STATUS:
-            print(f'Early stopping at epoch {epoch}')
-        break
-
-    loss.backward()
-    optimizer.step()
+    scheduler = lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='min',
+        factor=OPTIM_SCHEDULER['factor'],
+        patience=OPTIM_SCHEDULER['patience'],
+        min_lr=OPTIM_SCHEDULER['min_lr']
+    )
 
     with torch.no_grad():
         params_scaled[:] = grad_optim.limit_params(params_scaled)
 
-        if USE_SCHEDULER:
-            scheduler.step(loss.item())
+    # Training loop
+    for epoch in range(OPTIM_EPOCHS):
+        optimizer.zero_grad()
+        loss = grad_optim.get_loss(params_scaled)
 
-        if PRINT_STATUS and epoch % PRINT_INTERVAL == 0:
-            lr = optimizer.param_groups[0]['lr']
-            grad_optim.print_status(params_scaled, epoch, loss, lr)
+        if loss_tracker(loss.item(), params_scaled):
+            if PRINT_STATUS:
+                print(f'Early stopping at epoch {epoch}')
+            break
 
-# Compute final output
-best_params_scaled = loss_tracker.load_best()
-grad_optim.print_final_output(best_params_scaled)
+        loss.backward()
+        optimizer.step()
+
+        with torch.no_grad():
+            params_scaled[:] = grad_optim.limit_params(params_scaled)
+
+            if OPTIM_SCHEDULER['use']:
+                scheduler.step(loss.item())
+
+            if PRINT_STATUS and epoch % OPTIM_PRINT_INTERVAL == 0:
+                lr = optimizer.param_groups[0]['lr']
+                grad_optim.print_status(params_scaled, epoch, loss, lr)
+
+    # Compute final output
+    best_params_scaled = loss_tracker.load_best()
+    grad_optim.print_final_output(best_params_scaled)
+    params = data_handler.diff_scale(best_params_scaled, 'params', inverse=True)
+    params_list = params.flatten().tolist()
+    return params_list
+
+gradient_optimize()

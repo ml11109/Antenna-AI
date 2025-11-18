@@ -8,7 +8,7 @@ import xgboost as xgb
 from sklearn.linear_model import LinearRegression
 
 from neural_network.model import NeuralNetwork
-from integrated_workflow.workflow_constants import *
+from constants import *
 
 
 class ModelHandler:
@@ -20,10 +20,10 @@ class ModelHandler:
         self.model_type = model_type
         self.model = model
 
-    def train_single_model(self, model_type):
+    def train_single_model(self, model_type, data_handler):
         match model_type:
             case 'neuralnet':
-                model = NeuralNetwork()
+                model = None
             case 'xgboost':
                 model = xgb.XGBRegressor()
             case 'lightgbm':
@@ -33,16 +33,21 @@ class ModelHandler:
             case 'linear' | _:
                 model = LinearRegression()
 
-        # TODO: train model
+        if model_type == 'neuralnet':
+            data_handler.tensor = True
+
+        else:
+            data_handler.tensor = False
+            X, y = data_handler.load_data()
         test_loss = 0
 
         return model, test_loss
 
-    def train_all_models(self):
+    def train_all_models(self, data_handler):
         models, losses = {}, {}
 
         for model_type in MODELS:
-            model, test_loss = self.train_single_model(model_type)
+            model, test_loss = self.train_single_model(model_type, data_handler)
             models[model_type] = model
             losses[model_type] = test_loss
 
