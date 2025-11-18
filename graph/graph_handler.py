@@ -25,22 +25,30 @@ class GraphHandler:
         self.graph_range = graph_range
         self.used_freq_range = used_freq_range
         self.image_directory = Path(image_directory)
-        self.outputs_df, self.designs, self.design_no = None, None, None
+        self.outputs_df, self.designs, self.custom_design_no = None, None, None
 
         self.freqs = torch.linspace(self.graph_range[0], self.graph_range[1], self.graph_res)
         self.freqs_scaled = data_handler.diff_scale(self.freqs, 'freq')
         self.reset()
 
-    def reset(self):
-        self.outputs_df = pd.DataFrame(columns=['Frequency', 'Model Output', 'Design No'])
-        self.designs = {}
-        self.design_no = 1
+    def _update_data(self, params, outputs, random=False):
+        if random:
+            if self.random_design_no == 1:
+                design = 'Random design'
+            else:
+                design = f'Random design {self.random_design_no}'
+            self.random_design_no += 1
+        else:
+            if self.custom_design_no == 1:
+                design = 'Custom design'
+            else:
+                design = f'Custom design {self.custom_design_no}'
+            self.custom_design_no += 1
 
-    def update_data(self, params, outputs):
         df_temp = pd.DataFrame({
             'Frequency': self.freqs.numpy(),
             'Model Output': outputs.numpy(),
-            'Design No': self.design_no
+            'Design': design
         })
 
         if self.outputs_df.empty:
@@ -48,10 +56,25 @@ class GraphHandler:
         else:
             self.outputs_df = pd.concat([self.outputs_df, df_temp], ignore_index=True)
 
-        self.designs[f'Design {self.design_no}'] = params.tolist()
-        self.design_no += 1
+        self.designs[design] = params.tolist()
 
-    def add_design(self, params):
+    def _get_metadata(self):
+        graph_metadata = {
+            'model_name': self.model_name,
+            'graph_resolution': self.graph_res,
+            'graph_range': self.graph_range,
+            'used_frequency_range': self.used_freq_range,
+            'designs': self.designs
+        }
+        return graph_metadata
+
+    def reset(self):
+        self.outputs_df = pd.DataFrame(columns=['Frequency', 'Model Output', 'Design'])
+        self.designs = {}
+        self.custom_design_no = 1
+        self.random_design_no = 1
+
+    def add_design(self, params, random=False):
         params_scaled = self.data_handler.diff_scale(params.reshape(1, -1), 'params').to(torch.float32)
         params_rep = params_scaled.repeat(self.graph_res, 1)
         left = params_rep[:, :self.freq_index]
@@ -59,20 +82,20 @@ class GraphHandler:
         params_with_freq = torch.cat([left, self.freqs_scaled.reshape(-1, 1), right], dim=1)
         outputs_scaled = self.model(params_with_freq).detach()
         outputs = self.data_handler.scale(outputs_scaled, 'outputs', inverse=True).flatten()
-        self.update_data(params, outputs)
+        self._update_data(params, outputs, random)
 
     def add_random(self):
         params_scaled = torch.randn(self.num_params)
         params = self.data_handler.diff_scale(params_scaled, 'params', inverse=True)
         print(f'Generated random parameters: {[round(param, 4) for param in params.tolist()]}')
-        self.add_design(params)
+        self.add_design(params, random=True)
 
     def make_graph(self):
         plt.figure(figsize=(10, 6))
         sns.lineplot(
             x=self.outputs_df['Frequency'],
             y=self.outputs_df['Model Output'],
-            hue=self.outputs_df['Design No']
+            hue=self.outputs_df['Design']
         )
 
         plt.title('Model Output vs Frequency', fontsize=16, pad=15)
@@ -83,16 +106,6 @@ class GraphHandler:
         for f in self.used_freq_range:
             if self.graph_range[0] < f < self.graph_range[1]:
                 plt.axvline(x=f, color='gray', linestyle=':', linewidth=1.0, alpha=0.8)
-
-    def get_metadata(self):
-        graph_metadata = {
-            'model_name': self.model_name,
-            'graph_resolution': self.graph_res,
-            'graph_range': self.graph_range,
-            'used_frequency_range': self.used_freq_range,
-            'designs': self.designs
-        }
-        return graph_metadata
 
     def plot(self):
         self.make_graph()
@@ -106,6 +119,6 @@ class GraphHandler:
         plt.close()
 
         metadata_path = image_path.with_name(f"{image_path.stem}_metadata.json")
-        graph_metadata = self.get_metadata()
+        graph_metadata = self._get_metadata()
         with open(metadata_path, 'w') as f:
             json.dump(graph_metadata, f, indent=4)
