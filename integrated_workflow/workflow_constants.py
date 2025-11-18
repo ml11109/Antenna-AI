@@ -3,6 +3,7 @@ Constants for integrated workflow
 """
 
 OUTPUT = 's'
+NUM_PARAMS = 5
 MODEL_NAME = f'{OUTPUT}_model'
 DATA_NAME = f'{OUTPUT}_data'
 
