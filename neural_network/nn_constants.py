@@ -11,7 +11,7 @@ DATA_DIRECTORY = 'data/cleaned_data'
 SCALER_DIRECTORY = 'data/scalers'
 
 # Training parameters
-NUM_EPOCHS = 500
+NUM_EPOCHS = 10
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 TEST_SIZE = 0.2

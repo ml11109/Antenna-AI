@@ -15,12 +15,14 @@ from neural_network.nn_constants import *
 
 
 class DataHandler:
-    def __init__(self, data_name=DATA_NAME, data_directory=DATA_DIRECTORY, scaler_directory=SCALER_DIRECTORY, sweep_freq=SWEEP_FREQUENCY, freq_index=None, device=None):
+    def __init__(self, data_name=DATA_NAME, data_directory=DATA_DIRECTORY, scaler_directory=SCALER_DIRECTORY,
+                 sweep_freq=SWEEP_FREQUENCY, freq_index=None, device=None, tensors=True):
         self.data_directory = Path(data_directory)
         self.scaler_directory = Path(scaler_directory)
         self.sweep_freq = sweep_freq
         self.freq_index = freq_index
         self.device = device
+        self.tensors = tensors
 
         self.data_path = self.data_directory / (data_name + '.csv')
         self.scaler_x_path = self.scaler_directory / (data_name + '_x.pkl')
@@ -44,7 +46,7 @@ class DataHandler:
             case _:
                 raise ValueError(f'Invalid data_type: {data_type}')
 
-        return torch.from_numpy(op(data))
+        return torch.from_numpy(op(data)) if self.tensors else op(data)
 
     def diff_scale(self, data, data_type, index=None, inverse=False):
         match data_type:
@@ -74,10 +76,12 @@ class DataHandler:
         else:
             extract_index = extract_freq
 
-        mean, std = [
-            torch.tensor(extract_index(arr), dtype=torch.float32, device=self.device)
-            for arr in [scaler.mean_, scaler.scale_]
-        ]
+        mean = np.array(extract_index(scaler.mean_))
+        std = np.array(extract_index(scaler.scale_))
+
+        if self.tensors:
+            mean = torch.tensor(mean, dtype=torch.float32, device=self.device)
+            std = torch.tensor(std, dtype=torch.float32, device=self.device)
 
         if inverse:
             return data * std + mean
@@ -98,8 +102,9 @@ class DataHandler:
             x = self.scaler_x.transform(x)
             y = self.scaler_y.transform(y)
 
-        x = torch.Tensor(x)
-        y = torch.Tensor(y)
+        if self.tensors:
+            x = torch.Tensor(x)
+            y = torch.Tensor(y)
 
         return x, y
 
