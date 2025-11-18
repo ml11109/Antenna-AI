@@ -1,8 +1,12 @@
 """
-Constants for data cleaning
+Constants for data cleaning and handling
 """
 
 OUTPUT = 's'
+DATA_NAME = f'{OUTPUT}_data'
+
+DATA_DIRECTORY = 'data/cleaned_data'
+SCALER_DIRECTORY = 'data/scalers'
 
 RAW_DATA_DIR = f'raw_data/{OUTPUT}'
 CLEANED_DATA_PATH = f'cleaned_data/{OUTPUT}_data.csv'

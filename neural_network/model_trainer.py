@@ -8,16 +8,16 @@ from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import TensorDataset, DataLoader
 
-from neural_network.data_handler import DataHandler
+from data.data_handler import DataHandler
 from neural_network.loss_tracker import LossTracker
-from neural_network.model import PredictorModel
+from neural_network.model import NeuralNetwork
 from neural_network.nn_constants import *
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load and preprocess data
-data_handler = DataHandler()
+data_handler = DataHandler(sweep_freq=SWEEP_FREQUENCY, freq_index=FREQUENCY_INDEX, device=device, tensors=True)
 X_data, y_data = data_handler.load_data()
 X_temp, X_test, y_temp, y_test = train_test_split(X_data, y_data, test_size=TEST_SIZE, random_state=0)
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=0)
@@ -31,7 +31,7 @@ train_loader, val_loader, test_loader = [
 ]
 
 # Model definition
-model = PredictorModel(
+model = NeuralNetwork(
     input_dim=INPUT_DIM,
     hidden_dim=HIDDEN_DIM,
     output_dim=OUTPUT_DIM,
@@ -116,7 +116,7 @@ print(f'Test Loss: {test_loss:.6f}')
 metadata = {
     'output_param': OUTPUT,
     'model_name': MODEL_NAME,
-    'data_name': DATA_NAME,
+    'data_name': data_handler.data_name,
     'sweep_freq': SWEEP_FREQUENCY,
     'freq_index': FREQUENCY_INDEX,
     'results': {

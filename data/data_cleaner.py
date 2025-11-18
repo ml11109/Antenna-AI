@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from data_cleaning_constants import *
+from data_constants import *
 
 # Load files
 raw_data_dir, cleaned_data_path, default_params_path = [

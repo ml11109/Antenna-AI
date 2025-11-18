@@ -6,12 +6,12 @@ OUTPUT = 's'
 MODEL_NAME = f'{OUTPUT}_model'
 DATA_NAME = f'{OUTPUT}_data'
 
-NN_DIRECTORY = 'neural_network/models'
+MODEL_DIRECTORY = 'integrated_workflow/models'
 DATA_DIRECTORY = 'data/cleaned_data'
 SCALER_DIRECTORY = 'data/scalers'
 GRAPH_DIRECTORY = 'graph/saved_graphs'
 
-MODELS = ['neuralnet', 'xgboost', 'lightgbm', 'catboost']
+MODELS = ['neuralnet', 'xgboost', 'lightgbm', 'catboost', 'linear']
 MODEL = 'all'
 
 SIZE = 155

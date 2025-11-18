@@ -11,12 +11,13 @@ import torch
 from sklearn.preprocessing import StandardScaler
 from torch import Tensor
 
-from neural_network.nn_constants import *
+from data.data_constants import *
 
 
 class DataHandler:
     def __init__(self, data_name=DATA_NAME, data_directory=DATA_DIRECTORY, scaler_directory=SCALER_DIRECTORY,
-                 sweep_freq=SWEEP_FREQUENCY, freq_index=None, device=None, tensors=True):
+                 sweep_freq=False, freq_index=None, device=None, tensors=False):
+        self.data_name = data_name
         self.data_directory = Path(data_directory)
         self.scaler_directory = Path(scaler_directory)
         self.sweep_freq = sweep_freq

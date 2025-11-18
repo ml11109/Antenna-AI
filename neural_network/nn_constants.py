@@ -4,11 +4,7 @@ Constants for neural network training and testing
 
 OUTPUT = 's'
 MODEL_NAME = f'{OUTPUT}_model'
-DATA_NAME = f'{OUTPUT}_data'
-
 MODEL_DIRECTORY = 'neural_network/models'
-DATA_DIRECTORY = 'data/cleaned_data'
-SCALER_DIRECTORY = 'data/scalers'
 
 # Training parameters
 NUM_EPOCHS = 10
